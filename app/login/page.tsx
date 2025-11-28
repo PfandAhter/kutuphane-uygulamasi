@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService } from '@/app/src/services/authService';
-import Header from '@/components/Header';
+import { useAuth } from '@/src/context/AuthContext';
+import Header from '@/src/components/ui/Header';
 
 export default function LoginPage() {
+    const { login } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -18,8 +19,7 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            await authService.login({ email, password });
-            // Login successful, redirect to home
+            await login({ email, password });
             router.push('/');
         } catch (err: any) {
             setError(err.message || 'Giriş yapılırken bir hata oluştu.');
@@ -52,7 +52,7 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-stone-50"
+                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-black"
                                 placeholder="ornek@email.com"
                             />
                         </div>
@@ -64,7 +64,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-stone-50"
+                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-black"
                                 placeholder="******"
                             />
                         </div>
