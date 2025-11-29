@@ -1,0 +1,78 @@
+import {Publisher, BookAuthor, BookCopy} from '@/src/types/bookDetail'
+import {Category} from '@/src/types/category'
+
+export interface Book {
+    id: number;
+    title: string;
+    isbn: string;
+    pageCount: number;
+    publicationYear: number;
+    language: string;
+    category: Category;
+    publisher: Publisher;
+    bookAuthors: BookAuthor[];
+    bookCopies: BookCopy[];
+    authorId: number;
+    authorFirstName: string;
+    authorLastName: string;
+    categoryId: number;
+    categoryName: string;
+    publisherId: number;
+    publisherName: string;
+    imageUrl?: string; // Not in DTO but used in UI, might need to handle or use placeholder
+    price?: string; // Not in DTO, UI has it.
+}
+
+
+export interface PaginatedResult<T> {
+    items: T[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export interface BookFilterDto {
+    title?: string;
+    categoryId?: number;
+    publicationYearFrom?: number;
+    publicationYearTo?: number;
+    language?: string;
+    pageCountMin?: number;
+    pageCountMax?: number;
+    hasAvailableCopy?: boolean;
+    roomCode?: string;
+    page?: number;
+    size?: number;
+}
+
+export interface CopyFilterDto {
+    bookId: number;
+    page: number;
+    size: number;
+    sortBy?: string; // 'shelfCode', 'roomCode', 'barcode'
+    sortOrder?: 'asc' | 'desc';
+}
+
+export interface CreateBookDto {
+    title?: string;
+    isbn?: string;
+    pageCount: number;
+    publicationYear: number;
+    language?: string;
+    authorId?: number;
+    authorFirstName?: string;
+    authorLastName?: string;
+    categoryId?: number;
+    categoryName?: string;
+    publisherId?: number;
+    publisherName?: string;
+}
+
+export interface BookComment {
+    id: number;
+    userName: string; // Veya User nesnesi
+    content: string;
+    rating: number; // 1-5 arası
+    createdAt: string;
+}
