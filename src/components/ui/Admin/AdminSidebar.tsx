@@ -47,11 +47,10 @@ const menuItems: MenuItem[] = [
         ]
     },
     {
-        title: 'Yerleşim (Raf)',
+        title: 'Yerleşim',
         icon: '🗄️',
         subItems: [
             { title: 'Odalar ve Raflar', path: '/admin/shelves' },
-            { title: 'Yeni Raf Ekle', path: '/admin/shelves/add' }
         ]
     }
 ];
