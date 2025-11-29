@@ -1,6 +1,5 @@
 import type { BookFilterDto, PaginatedResult, Book } from "../types/book";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5066/api";
+import type { BookDetail } from "@/src/types/bookDetail";
 
 const API_ROUTE_BASE = "/api/book";
 
@@ -18,13 +17,12 @@ export const bookService = {
         if (filter.hasAvailableCopy !== undefined) params.append("HasAvailableCopy", filter.hasAvailableCopy.toString());
         if (filter.roomCode) params.append("RoomCode", filter.roomCode);
 
-        params.append("Page", (filter.page || 0).toString());
-        params.append("Size", (filter.size || 10).toString());
+        params.append("Page", (filter.page ?? 1).toString());
+        params.append("Size", (filter.size ?? 12).toString());
 
         const url = `${API_ROUTE_BASE}/list?${params.toString()}`;
 
         const response = await fetch(url, { cache: "no-store" }); // Force-cache yapilabilir ama derste sikinti olabilir.
-        console.log("Book Service Response:", response);
 
         if (!response.ok) {
             throw new Error("Failed to fetch books");
@@ -41,13 +39,32 @@ export const bookService = {
         return response.json();
     },*/
 
-    async getBookDetails(id: number): Promise<Book> {
-        const url = `${API_ROUTE_BASE}/get-book-details/${id}`;
+    async getBookDetails(id: number): Promise<BookDetail> {
+        const url = `${API_ROUTE_BASE}/get-book-details?id=${id}`;
+
+        console.log("Fetching book details from URL:", url);
+
         const response = await fetch(url, { cache: "no-store" });
 
         if (!response.ok) {
             throw new Error("Failed to fetch book details");
         }
         return response.json();
+    },
+
+    async getBooksByAuthor(authorId: number, currentBookId: number, categoryId: number): Promise<Book[]> {
+        const params = new URLSearchParams();
+        params.set('authorId', authorId.toString());
+        params.set('size', '5'); // Sadece 5 tane getir
+        params.set('categoryId', categoryId.toString());
+
+        const url = `${API_ROUTE_BASE}/get-by-author?${params.toString()}`;
+        const response = await fetch(url, { cache: 'no-store' });
+        const data = await response.json();
+
+        console.log("Fetching books response",  data);
+        if (!response.ok) return [];
+        return data;
+        //return data.items.filter((b: any) => b.id !== currentBookId); // Bunu duzelticez.
     }
 };

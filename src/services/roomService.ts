@@ -1,8 +1,7 @@
-import {BookCopy, Room} from '@/src/types/bookDetail';
+import {BookCopy} from '@/src/types/bookDetail';
 import { PaginatedResult, CopyFilterDto} from "@/src/types/book";
-// DİKKAT: Headers importuna gerek yok, interceptor halledecek
 import axiosInstance from '@/src/utils/axiosInstance';
-import {CreateRoomDto} from "@/src/types/location";
+import {CreateRoomDto, Room} from "@/src/types/roomAndShelf";
 
 const API_ROUTE_BASE = "/api/room";
 
@@ -11,7 +10,6 @@ export const roomService = {
         const url = `${API_ROUTE_BASE}/list`;
         try {
             const response = await axiosInstance.get(url, {
-
                 baseURL: '',
             });
 
@@ -29,7 +27,12 @@ export const roomService = {
         return response.data;
     },
 
-
+    updateRoom: async (id: number, dto: CreateRoomDto): Promise<void> => {
+        // PUT isteği atıyoruz
+        await axiosInstance.put(`${API_ROUTE_BASE}/update?id=${id}`, dto, {
+            baseURL: '' // Proxy'ye gitmesi için
+        });
+    },
 
     async getCopiesByBookId(filter: CopyFilterDto): Promise<PaginatedResult<BookCopy>> {
         const params = new URLSearchParams();
