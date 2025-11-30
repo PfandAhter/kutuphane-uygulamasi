@@ -6,7 +6,6 @@ const API_BASE_URL = process.env.BACKEND_PUBLIC_API_BASE_URL;
 export async function GET(){
     try{
         console.log("Proxy GET /api/category/list called");
-        console.log("Using API_BASE_URL:", API_BASE_URL);
         const response = await axios.get(`${API_BASE_URL}/api/Category/list`, {
             headers: {
                 'Content-Type': 'application/json',
