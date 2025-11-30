@@ -1,5 +1,6 @@
 import React from 'react';
 import BookCard from './BookCard';
+import BookListSkeleton from "@/src/components/ui/Skeletons/BookListSkeleton";
 
 interface BookGridProps {
     books: any[];
@@ -9,10 +10,7 @@ interface BookGridProps {
 export default function BookGrid({ books, loading }: BookGridProps) {
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 text-stone-400 animate-pulse">
-                <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-800 rounded-full animate-spin mb-4"></div>
-                <p>Kütüphane taranıyor...</p>
-            </div>
+            <BookListSkeleton/>
         );
     }
 
