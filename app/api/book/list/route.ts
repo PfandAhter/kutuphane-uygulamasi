@@ -1,34 +1,31 @@
 // app/api/book/route.ts
 import { NextResponse } from "next/server";
+import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5066/api";
+const API_BASE_URL = process.env.BACKEND_PUBLIC_API_BASE_URL;
 
 export async function GET(req: Request) {
     try {
         const url = new URL(req.url);
         const query = url.search; // ?Page=0&Size=10...
 
-        const backendUrl = `${API_BASE_URL}/Book/get-all-books${query}`;
+        console.log("Query Information ", query);
 
-        const backendRes = await fetch(backendUrl, {
-            method: "GET",
-            headers: {
-                // Tarayıcıdan gelen cookie'leri backend'e iletmek istersen:
-                //cookie: req.headers.get("cookie") ?? "",
-                // gerektiğinde ek header'lar eklenebilir
-            },
-            // server-side fetch için timeout/next cache ayarları eklenebilir
-        });
+        const response = await axios.get(`${API_BASE_URL}/api/Book/get-all-books${query}`);
 
-        const contentType = backendRes.headers.get("content-type") ?? "application/json";
-        const text = await backendRes.text();
+        return new NextResponse(JSON.stringify(response.data), {
+            status: response.status,
+            headers: { "content-type": "application/json" },
+        })
+    } catch (err: any) {
+        console.error("Proxy GET /api/book hata:", err?.message);
 
-        return new NextResponse(text, {
-            status: backendRes.status,
-            headers: { "content-type": contentType },
-        });
-    } catch (err) {
-        console.error("Proxy GET /api/book hata:", err);
-        return NextResponse.json({ error: "Proxy failed" }, { status: 500 });
+        const status = err.response?.status || 500;
+
+        if (status === 404) {
+            return NextResponse.json(null, { status: 200 });
+        }
+        const data = err.response?.data || { error: "Book Listeleme işlemi başarısız." };
+        return NextResponse.json(data, { status: status });
     }
 }
