@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {categoryService} from "@/src/services/categoryService";
+import {Category} from "@/src/types/category";
+import CategoryListSkeleton from "@/src/components/ui/Skeletons/CategoryListSkeleton";
 
 const Sidebar = () => {
     const router = useRouter();
@@ -10,6 +13,30 @@ const Sidebar = () => {
     const [author, setAuthor] = useState(searchParams.get('author') || '');
     const [yearMin, setYearMin] = useState(searchParams.get('yearMin') || '');
     const [yearMax, setYearMax] = useState(searchParams.get('yearMax') || '');
+
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const result = await categoryService.getCategories();
+
+                if(!result || result.length === 0) {
+                    setCategories([]);
+                    setIsLoading(false);
+                    return;
+                }
+                setCategories(result);
+            } catch (error) {
+                console.error("Kategori verisi alınırken hata oluştu:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const handleCategoryClick = (categoryId?: number) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -44,35 +71,38 @@ const Sidebar = () => {
             </h3>
 
             <ul className="space-y-2 text-sm text-stone-700">
+                {/* Tüm Kitaplar Seçeneği (Sabit Kalır) */}
                 <li
                     onClick={() => handleCategoryClick()}
                     className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all font-bold ${!searchParams.get('categoryId') ? 'text-amber-900' : ''}`}>
                     Tüm Kitaplar
                 </li>
-                <li
-                    onClick={() => handleCategoryClick(1)}
-                    className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${searchParams.get('categoryId') === '1' ? 'text-amber-900 font-bold' : ''}`}>
-                    <span>Edebiyat</span>
-                    <span className="text-amber-600/60 text-xs group-hover:text-amber-800">(120)</span>
-                </li>
-                <li
-                    onClick={() => handleCategoryClick(2)}
-                    className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${searchParams.get('categoryId') === '2' ? 'text-amber-900 font-bold' : ''}`}>
-                    <span>Bilim Kurgu</span>
-                    <span className="text-amber-600/60 text-xs group-hover:text-amber-800">(45)</span>
-                </li>
-                <li
-                    onClick={() => handleCategoryClick(3)}
-                    className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${searchParams.get('categoryId') === '3' ? 'text-amber-900 font-bold' : ''}`}>
-                    <span>Tarih</span>
-                    <span className="text-amber-600/60 text-xs group-hover:text-amber-800">(30)</span>
-                </li>
-                <li
-                    onClick={() => handleCategoryClick(4)}
-                    className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${searchParams.get('categoryId') === '4' ? 'text-amber-900 font-bold' : ''}`}>
-                    <span>Felsefe</span>
-                    <span className="text-amber-600/60 text-xs group-hover:text-amber-800">(12)</span>
-                </li>
+
+                {/* Yükleniyor Durumu */}
+                {isLoading && (
+                    <CategoryListSkeleton/>
+                )}
+
+                {/* Dinamik Kategoriler */}
+                {!isLoading && categories.map((category) => (
+                    <li
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.id)}
+                        className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${
+                            searchParams.get('categoryId') === category.id.toString()
+                                ? 'text-amber-900 font-bold'
+                                : ''
+                        }`}
+                    >
+                        <span>{category.name}</span>
+                        {/* Eğer backend count verisi dönerse göster, dönmezse gizle */}
+                        {category.bookCount !== undefined && (
+                            <span className="text-amber-600/60 text-xs group-hover:text-amber-800">
+                                ({category.bookCount})
+                            </span>
+                        )}
+                    </li>
+                ))}
             </ul>
 
             <div className="mt-8">
