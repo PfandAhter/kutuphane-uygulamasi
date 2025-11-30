@@ -65,7 +65,7 @@ export interface CreateBookCopyResponseDto{
 
 export interface CreateCopyBookDto{
     bookId: number;
-    shelfCode: number;
+    shelfCode: string;
     barcodeNumber: string;
     roomId: number;
 }
@@ -83,6 +83,18 @@ export interface CreateBookDto {
     categoryName?: string;
     publisherId?: number;
     publisherName?: string;
+}
+
+export interface UpdateBookDto {
+    id: number;
+    title: string;
+    isbn: string;
+    pageCount: number;
+    publicationYear: number;
+    language: string;
+    authorId: number;
+    publisherId: number;
+    categoryId: number;
 }
 
 export interface BookComment {

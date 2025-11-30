@@ -1,5 +1,13 @@
-import type { BookFilterDto, PaginatedResult, Book } from "../types/book";
+import type {
+    BookFilterDto,
+    PaginatedResult,
+    Book,
+    CreateBookDto,
+    CreateBookResponseDto,
+    UpdateBookDto
+} from "@/src/types/book";
 import type { BookDetail } from "@/src/types/bookDetail";
+import axiosInstance from "@/src/utils/axiosInstance";
 
 const API_ROUTE_BASE = "/api/book";
 
@@ -29,6 +37,40 @@ export const bookService = {
         }
 
         return response.json();
+    },
+
+    async getBookByName(name: string): Promise<Book[]> {
+        try {
+            const response = await axiosInstance.get(`${API_ROUTE_BASE}/get-by-name`, {
+                params: { name },
+                baseURL: ''
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.error("Kitap arama hatası:", error);
+            return [];
+        }
+    },
+
+    createBook: async (dto: CreateBookDto): Promise<CreateBookResponseDto> => {
+        // İstek: POST /api/book/add
+        const response = await axiosInstance.post(`${API_ROUTE_BASE}/create`, dto, {
+            baseURL: '' // Proxy'ye yönlendir
+        });
+        return response.data;
+    },
+
+    updateBook: async (id: number, dto: UpdateBookDto): Promise<void> => {
+        // Backend: PUT /api/Book/{id}
+        // Proxy: PUT /api/book/update?id={id}
+        await axiosInstance.put(`${API_ROUTE_BASE}/update?id=${id}`, dto, { baseURL: '' });
+    },
+
+    deleteBook: async (id: number): Promise<void> => {
+        // Backend: DELETE /api/Book/{id}
+        // Proxy: DELETE /api/book/delete?id={id}
+        await axiosInstance.delete(`${API_ROUTE_BASE}/delete?id=${id}`, { baseURL: '' });
     },
 
     /*async getBookById(id: number): Promise<Book> {

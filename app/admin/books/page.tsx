@@ -3,14 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AddBookCopyModal from '@/src/components/ui/Admin/Modals/AddBookCopyModal';
+import ManageBookCopiesModal from "@/src/components/ui/Admin/Modals/ManageBookCopiesModal";
+import UpdateBookModal from '@/src/components/ui/Admin/Modals/UpdateBookModal';
+import DeleteConfirmationModal from '@/src/components/ui/Admin/Modals/DeleteConfirmationModal';
+
 import { bookService } from '@/src/services/bookService';
+import { categoryService } from '@/src/services/categoryService';
 // DÜZELTME: Güncellediğin Book interface'ini kullanıyoruz
 import { Book, BookFilterDto } from '@/src/types/book';
-import ManageBookCopiesModal from "@/src/components/ui/Admin/Modals/ManageBookCopiesModal";
+import { Category } from "@/src/types/category";
 
 export default function AdminBooksPage() {
     // --- STATE YÖNETİMİ ---
     const [books, setBooks] = useState<Book[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
 
@@ -25,10 +31,25 @@ export default function AdminBooksPage() {
     // Modal Durumu
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
-    // --- VERİ ÇEKME FONKSİYONU ---
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await categoryService.getCategories();
+                if (Array.isArray(data)) {
+                    setCategories(data);
+                }
+            } catch (error) {
+                console.error("Kategoriler yüklenemedi", error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
     const fetchBooks = async () => {
         setLoading(true);
         try {
@@ -79,20 +100,16 @@ export default function AdminBooksPage() {
         }
         //fetchBooks();
     };
-
-    const handleOpenCopyModal = (book: Book) => {
-        setSelectedBook(book);
-        setIsModalOpen(true);
-    };
-
-    const handleOpenManageModal = (book: Book) => {
-        setSelectedBook(book);
-        setIsManageModalOpen(true);
-    };
+    const handleOpenCopyModal = (book: Book) => { setSelectedBook(book); setIsModalOpen(true); };
+    const handleOpenManageModal = (book: Book) => { setSelectedBook(book); setIsManageModalOpen(true); };
+    const handleOpenUpdateModal = (book: Book) => { setSelectedBook(book); setIsUpdateModalOpen(true); };
+    const handleOpenDeleteModal = (book: Book) => { setSelectedBook(book); setIsDeleteModalOpen(true); };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setIsManageModalOpen(false);
+        setIsUpdateModalOpen(false);
+        setIsDeleteModalOpen(false);
         setSelectedBook(null);
     };
 
@@ -103,7 +120,6 @@ export default function AdminBooksPage() {
     // --- RENDER ---
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-stone-800 font-serif">Kitap Yönetimi</h1>
@@ -117,7 +133,6 @@ export default function AdminBooksPage() {
                 </Link>
             </div>
 
-            {/* Filtreleme Alanı */}
             <div className="bg-white p-4 rounded-lg border border-stone-200 flex gap-4 shadow-sm">
                 <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
@@ -133,15 +148,18 @@ export default function AdminBooksPage() {
                 <select
                     value={selectedCategory ?? ""}
                     onChange={(e) => setSelectedCategory(e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-stone-600 bg-white"
+                    className="border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-stone-600 bg-white min-w-[150px]"
                 >
                     <option value="">Tüm Kategoriler</option>
-                    <option value="1">Edebiyat</option>
-                    <option value="2">Tarih</option>
-                    <option value="3">Bilim</option>
+
+                    {/* State'ten gelen kategorileri listeliyoruz */}
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
+                    ))}
                 </select>
 
-                {/* Ara butonu opsiyonel, zaten otomatik arıyor ama manuel yenileme için kalabilir */}
                 <button
                     onClick={() => fetchBooks()}
                     className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-6 py-2 rounded text-sm font-medium transition-colors"
@@ -150,7 +168,6 @@ export default function AdminBooksPage() {
                 </button>
             </div>
 
-            {/* Kitap Tablosu */}
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden min-h-[400px]">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-stone-50 text-stone-500 uppercase text-xs border-b border-stone-200">
@@ -185,7 +202,6 @@ export default function AdminBooksPage() {
                     )}
 
                     {!loading && books.map((book) => {
-                        // Kopya sayısını hesapla (dizi yoksa 0)
                         const copyCount = book.bookCopies?.length || 0;
 
                         return (
@@ -201,7 +217,6 @@ export default function AdminBooksPage() {
                                     {book.bookAuthors && book.bookAuthors.length > 0 ? (
                                         book.bookAuthors.map(ba => `${ba.author.firstName} ${ba.author.lastName}`).join(", ")
                                     ) : (
-                                        // Eğer bookAuthors boşsa fallback olarak düz author alanlarını kullan
                                         (book.authorFirstName && book.authorLastName)
                                             ? `${book.authorFirstName} ${book.authorLastName}`
                                             : <span className="text-stone-400 italic">Bilinmiyor</span>
@@ -219,7 +234,6 @@ export default function AdminBooksPage() {
                                     {book.publicationYear}
                                 </td>
 
-                                {/* YENİ EKLENEN KOPYA SAYISI KOLONU */}
                                 <td className="px-6 py-4 text-center">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                                         copyCount > 0
@@ -249,16 +263,18 @@ export default function AdminBooksPage() {
 
                                     <div className="h-4 w-px bg-stone-300 mx-1"></div>
                                     <button
+                                        onClick={() => handleOpenUpdateModal(book)}
                                         className="text-stone-400 hover:text-amber-700 transition-colors font-medium"
-                                        onClick={() => alert('Düzenleme işlemi henüz uygulanmadı.')}
+                                        title="Düzenle"
                                     >
-                                        Düzenle
+                                        ✏️ Düzenle
                                     </button>
                                     <button
+                                        onClick={() => handleOpenDeleteModal(book)}
                                         className="text-stone-400 hover:text-red-700 transition-colors font-medium"
-                                        onClick={() => alert('Silme işlemi henüz uygulanmadı.')}
+                                        title="Sil"
                                     >
-                                        Sil
+                                        Sil 🗑️
                                     </button>
                                 </td>
                             </tr>
@@ -268,7 +284,6 @@ export default function AdminBooksPage() {
                 </table>
             </div>
 
-            {/* Pagination Controls */}
             {!loading && totalCount > 0 && (
                 <div className="flex justify-between items-center pt-2">
                     <span className="text-xs text-stone-500">
@@ -296,7 +311,6 @@ export default function AdminBooksPage() {
                 </div>
             )}
 
-            {/* MODAL COMPONENT */}
             <AddBookCopyModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
@@ -307,6 +321,19 @@ export default function AdminBooksPage() {
                 onClose={handleCloseModal}
                 book={selectedBook}
                 onUpdate={handleUpdateSuccess}
+            />
+            <UpdateBookModal
+                isOpen={isUpdateModalOpen}
+                onClose={handleCloseModal}
+                book={selectedBook}
+                onSuccess={fetchBooks}
+            />
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseModal}
+                bookId={selectedBook?.id || 0}
+                bookTitle={selectedBook?.title || ''}
+                onSuccess={fetchBooks}
             />
         </div>
     );
