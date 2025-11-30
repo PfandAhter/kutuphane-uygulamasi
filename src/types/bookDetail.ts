@@ -1,12 +1,8 @@
 import { Shelf } from '@/src/types/roomAndShelf';
 import { Category } from "@/src/types/category";
+import { Author, Publisher } from "@/src/types/publisherAndAuthor";
 
 // src/types/book.ts
-export interface Author {
-    id: number;
-    firstName: string;
-    lastName: string;
-}
 
 export interface BookAuthor {
     bookId: number;
@@ -19,11 +15,6 @@ export interface BookCopy {
     barcodeNumber: string;
     isAvailable: boolean;
     shelf: Shelf;
-}
-
-export interface Publisher {
-    id: number;
-    name: string;
 }
 
 export interface BookDetail {

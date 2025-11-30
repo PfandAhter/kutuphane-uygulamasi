@@ -1,4 +1,5 @@
-import {Publisher, BookAuthor, BookCopy} from '@/src/types/bookDetail'
+import {BookAuthor, BookCopy} from '@/src/types/bookDetail'
+import { Publisher } from '@/src/types/publisherAndAuthor'
 import {Category} from '@/src/types/category'
 
 export interface Book {
@@ -52,6 +53,21 @@ export interface CopyFilterDto {
     size: number;
     sortBy?: string; // 'shelfCode', 'roomCode', 'barcode'
     sortOrder?: 'asc' | 'desc';
+}
+
+export interface CreateBookResponseDto{
+    id: number;
+}
+
+export interface CreateBookCopyResponseDto{
+    id: number;
+}
+
+export interface CreateCopyBookDto{
+    bookId: number;
+    shelfCode: number;
+    barcodeNumber: string;
+    roomId: number;
 }
 
 export interface CreateBookDto {
