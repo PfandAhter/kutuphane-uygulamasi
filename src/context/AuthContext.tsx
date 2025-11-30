@@ -1,6 +1,6 @@
 'use client';
 
-import React, {createContext, useState} from 'react';
+import React, {createContext, useContext, useState} from 'react';
 import {AuthContextType} from "@/src/types/authContextType";
 import {AuthResponse, LoginDto, RegisterDto, UserProfile} from "@/src/types/auth";
 import {authService} from "@/src/services/authService";
@@ -32,6 +32,14 @@ const getInitialUser = (): UserProfile | null => {
 const getInitialToken = (): string | null => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem("token");
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 };
 
 export const AuthProvider = ({children}: { children: React.ReactNode }) => {
