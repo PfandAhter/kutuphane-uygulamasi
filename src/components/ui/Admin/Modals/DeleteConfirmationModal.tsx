@@ -12,6 +12,8 @@ interface Props {
     onSuccess: () => void;
 }
 
+
+//TODO: GenericDeleteModal olarak değiştirilebilir
 export default function DeleteConfirmationModal({ isOpen, onClose, bookId, bookTitle, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
 
