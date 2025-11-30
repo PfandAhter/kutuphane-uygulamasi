@@ -25,7 +25,7 @@ export async function GET(request:NextRequest) {
                 "Content-type": "application/json"
             },
         });
-    } catch (err: unknown) {
+    } catch (err: any) {
         console.error("Proxy GET /api/room/list hata:", err);
         const status = err.response?.status || 500;
         const data = err.response?.data || { error: "Proxy failed" };
