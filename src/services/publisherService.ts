@@ -1,5 +1,5 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import { Publisher } from '@/src/types/bookDetail';
+import {Publisher, CreatePublisherDto} from "@/src/types/publisherAndAuthor";
 
 const API_ROUTE_BASE = "/api/publisher";
 
@@ -15,5 +15,9 @@ export const publisherService = {
             console.error("Error fetching publishers:", error);
             return [];
         }
+    },
+    createPublisher: async (dto: CreatePublisherDto): Promise<Publisher> => {
+        const response = await axiosInstance.post(`${API_ROUTE_BASE}/create`, dto, { baseURL: '' });
+        return response.data;
     }
 };
