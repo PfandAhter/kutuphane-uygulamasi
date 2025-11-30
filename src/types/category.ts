@@ -3,3 +3,7 @@ export interface Category{
     name: string;
     count?: number;
 }
+
+export interface CreateCategoryDto {
+    name: string;
+}
