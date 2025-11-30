@@ -49,17 +49,35 @@ export default function AdminBooksPage() {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        if(searchTerm.trim() === "") {
+            fetchBooks();
+            return;
+        }
+        const delayDebounceFn = setTimeout(() => {
+            setPage(1);
+            handleSearch();
+        }, 500);
+        return () => clearTimeout(delayDebounceFn);
+
+    }, [searchTerm, selectedCategory]);
 
     useEffect(() => {
         fetchBooks();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
     // --- HANDLERS ---
-
-    const handleSearch = () => {
+    const handleSearch = async () => {
         setPage(1);
-        fetchBooks();
+        try{
+            const result = await bookService.getBookByName(searchTerm);
+
+            setBooks(result);
+            setTotalCount(result.length);
+        }catch(err){
+            console.error("Kitap arama hatası:", err);
+        }
+        //fetchBooks();
     };
 
     const handleOpenCopyModal = (book: Book) => {
@@ -101,14 +119,16 @@ export default function AdminBooksPage() {
 
             {/* Filtreleme Alanı */}
             <div className="bg-white p-4 rounded-lg border border-stone-200 flex gap-4 shadow-sm">
-                <input
-                    type="text"
-                    placeholder="Kitap Adı Ara..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="flex-1 border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-stone-800 placeholder-stone-400"
-                />
+                <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Kitap Adı Ara..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full border border-stone-300 rounded pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-amber-500 text-stone-800 placeholder-stone-400"
+                    />
+                </div>
 
                 <select
                     value={selectedCategory ?? ""}
@@ -121,11 +141,12 @@ export default function AdminBooksPage() {
                     <option value="3">Bilim</option>
                 </select>
 
+                {/* Ara butonu opsiyonel, zaten otomatik arıyor ama manuel yenileme için kalabilir */}
                 <button
-                    onClick={handleSearch}
+                    onClick={() => fetchBooks()}
                     className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-6 py-2 rounded text-sm font-medium transition-colors"
                 >
-                    Ara
+                    Yenile
                 </button>
             </div>
 

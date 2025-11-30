@@ -1,24 +1,70 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { dashboardService } from '@/src/services/dashboardService';
+import { DashboardStatus } from '@/src/types/dashboard';
 
 // İstatistik Kartı Componenti
-const StatCard = ({ title, value, icon, trend }: any) => (
-    <div className="bg-white p-6 rounded-lg border border-amber-200/60 shadow-sm flex items-start justify-between">
+interface StatCardProps {
+    title: string;
+    value: number | string; // Loading sırasında string gelebilir
+    icon: React.ReactNode;
+    trend?: string;
+    isDanger?: boolean; // Kırmızı uyarı için
+}
+
+const StatCard = ({ title, value, icon, trend, isDanger }: StatCardProps) => (
+    <div className={`bg-white p-6 rounded-lg border shadow-sm flex items-start justify-between transition-all hover:shadow-md ${isDanger ? 'border-red-200 bg-red-50/30' : 'border-amber-200/60'}`}>
         <div>
-            <p className="text-stone-500 text-sm font-medium mb-1">{title}</p>
-            <h3 className="text-3xl font-bold text-amber-950 font-serif">{value}</h3>
-            <span className="text-xs text-green-600 font-bold mt-2 inline-block bg-green-50 px-2 py-0.5 rounded">
-                {trend}
-            </span>
+            <p className={`text-sm font-medium mb-1 ${isDanger ? 'text-red-700' : 'text-stone-500'}`}>{title}</p>
+            <h3 className={`text-3xl font-bold font-serif ${isDanger ? 'text-red-800' : 'text-amber-950'}`}>{value}</h3>
+
+            {/* Backend trend verisi göndermediği için şimdilik statik veya hesaplanmış gösteriyoruz */}
+            {trend && (
+                <span className={`text-xs font-bold mt-2 inline-block px-2 py-0.5 rounded ${isDanger ? 'bg-red-100 text-red-700' : 'bg-green-50 text-green-600'}`}>
+                    {trend}
+                </span>
+            )}
         </div>
-        <div className="p-3 bg-stone-100 rounded-lg text-2xl border border-stone-200">
+        <div className={`p-3 rounded-lg text-2xl border ${isDanger ? 'bg-red-100 border-red-200 text-red-600' : 'bg-stone-100 border-stone-200'}`}>
             {icon}
         </div>
     </div>
 );
 
+// Skeleton Loading Componenti
+const StatCardSkeleton = () => (
+    <div className="bg-white p-6 rounded-lg border border-stone-200 shadow-sm animate-pulse">
+        <div className="flex justify-between items-start">
+            <div className="space-y-3 w-1/2">
+                <div className="h-4 bg-stone-200 rounded w-2/3"></div>
+                <div className="h-8 bg-stone-200 rounded w-full"></div>
+                <div className="h-3 bg-stone-200 rounded w-1/2"></div>
+            </div>
+            <div className="w-12 h-12 bg-stone-200 rounded-lg"></div>
+        </div>
+    </div>
+);
+
 export default function AdminDashboard() {
+    const [stats, setStats] = useState<DashboardStatus | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await dashboardService.getStats();
+                setStats(data);
+            } catch (error) {
+                console.error("İstatistikler alınamadı", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -29,13 +75,43 @@ export default function AdminDashboard() {
 
             {/* İstatistikler Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Toplam Kitap" value="12,450" icon="📚" trend="+12 bu hafta" />
-                <StatCard title="Aktif Üyeler" value="840" icon="👥" trend="+5 yeni üye" />
-                <StatCard title="Ödünçteki Kitaplar" value="124" icon="⏳" trend="%12 doluluk" />
-                <StatCard title="Geciken İadeler" value="8" icon="⚠️" trend="Dikkat" />
+                {loading ? (
+                    // 4 tane Skeleton göster
+                    [...Array(4)].map((_, i) => <StatCardSkeleton key={i} />)
+                ) : stats ? (
+                    <>
+                        <StatCard
+                            title="Toplam Kitap"
+                            value={stats.totalBookCount}
+                            icon="📚"
+                            trend="Envanter"
+                        />
+                        <StatCard
+                            title="Kayıtlı Üyeler"
+                            value={stats.userCount}
+                            icon="👥"
+                            trend="Aktif Kullanıcı"
+                        />
+                        <StatCard
+                            title="Ödünçteki Kitaplar"
+                            value={stats.loanedBookCount}
+                            icon="⏳"
+                            trend="% Doluluk"
+                        />
+                        <StatCard
+                            title="Geciken İadeler"
+                            value={stats.overdueBookCount}
+                            icon="⚠️"
+                            trend={stats.overdueBookCount > 0 ? "İşlem Gerekiyor" : "Sorun Yok"}
+                            isDanger={stats.overdueBookCount > 0}
+                        />
+                    </>
+                ) : (
+                    <p className="text-red-500 col-span-4">Veri yüklenemedi.</p>
+                )}
             </div>
 
-            {/* Son Hareketler Tablosu (Örnek) */}
+            {/* Son Hareketler Tablosu (Statik kalabilir veya LoanService bağlanabilir) */}
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
                 <div className="p-5 border-b border-stone-100 flex justify-between items-center">
                     <h3 className="font-bold text-stone-800">Son İşlemler</h3>
