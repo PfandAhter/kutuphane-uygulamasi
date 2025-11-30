@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import toast from "react-hot-toast";
-import { Room, Shelf } from '@/src/types/location'; // Düzgün type import
 import { roomService } from "@/src/services/roomService";
-import { shelfService } from "@/src/services/shelfService"; // YENİ
+import { shelfService } from "@/src/services/shelfService";
 import { bookCopyService } from "@/src/services/bookCopyService";
 import { CreateCopyBookDto } from "@/src/types/book";
+import { Room, Shelf } from '@/src/types/roomAndShelf';
 
 interface AddCopyModalProps {
     isOpen: boolean;
