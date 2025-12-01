@@ -1,6 +1,6 @@
 'use client';
 
-import {Suspense} from "react";
+import { useEffect, useState, Suspense } from "react";
 import Header from "@/src/components/ui/Header";
 import Sidebar from "@/src/components/ui/Sidebar";
 import BookGrid from "@/src/components/ui/Book/BookGrid";
@@ -8,10 +8,9 @@ import Pagination from "@/src/components/ui/Book/Pagination";
 import ResultsInfo from "@/src/components/ui/Book/ResultsInfo";
 import { bookService } from "@/src/services/bookService";
 import { BookFilterDto, Book } from "@/src/types/book";
-import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function Home() {
+function HomeContent() {
     const router = useRouter(); // URL değiştirmek için
     const searchParams = useSearchParams();
     const paramsString = searchParams ? searchParams.toString() : "";
@@ -100,5 +99,13 @@ export default function Home() {
                 </section>
             </main>
         </div>
+    );
+}
+
+export default function Home() {
+    return (
+        <Suspense fallback={<div className="flex justify-center p-10">Yükleniyor...</div>}>
+            <HomeContent />
+        </Suspense>
     );
 }
