@@ -1,7 +1,7 @@
 export interface Category{
     id: number;
     name: string;
-    count?: number;
+    bookCount?: number;
 }
 
 export interface CreateCategoryDto {

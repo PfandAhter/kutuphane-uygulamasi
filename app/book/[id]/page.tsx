@@ -13,6 +13,7 @@ import AuthorOtherBooks from "@/src/components/ui/BookDetail/AuthorOtherBooks";
 
 
 import { useAuth } from '@/src/hooks/useAuth';
+import BookDetailSkeleton from "@/src/components/ui/Skeletons/BookDetailSkeleton";
 
 // Helper to generate placeholder image based on title
 const getBookImage = (title: string) => {
@@ -78,12 +79,8 @@ export default function BookDetailPage() {
         return (
             <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
                 <Header />
-                <div className="flex items-center justify-center flex-1 h-[50vh]">
-                    <div className="animate-pulse flex flex-col items-center">
-                        <div className="h-4 w-32 bg-amber-200 rounded mb-2"></div>
-                        <span className="text-amber-800 font-serif">Kitap aranıyor...</span>
-                    </div>
-                </div>
+                {/* Eski loading yerine Skeleton Component'i */}
+                <BookDetailSkeleton />
             </div>
         );
     }
