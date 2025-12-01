@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { BookCopy, Room } from '@/src/types/bookDetail';
+import { BookCopy } from '@/src/types/bookDetail';
+import { Room } from '@/src/types/roomAndShelf';
 import { Book } from "@/src/types/book";
 import { roomService } from '@/src/services/roomService';
 import { bookService } from '@/src/services/bookService';
@@ -38,14 +39,14 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     }, [isOpen, book]);
 
     const fetchAllData = async () => {
-        if (!book) return;
+        /*if (!book) return;
         setLoading(true);
         try {
             // Paralel istek atalım (Odalar ve Kopyalar)
             const [roomsData, copiesResult] = await Promise.all([
                 roomService.getRooms(),
                 // Backend'e "Bana hepsini ver" diyoruz (size: 1000)
-                bookService.getCopiesByBookId({ bookId: book.id, page: 1, size: 1000 })
+                //bookService.getCopiesByBookId({ bookId: book.id, page: 1, size: 1000 })
             ]);
 
             if (Array.isArray(roomsData)) setRooms(roomsData);
@@ -56,7 +57,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
             console.error("Veri hatası:", error);
         } finally {
             setLoading(false);
-        }
+        }*/
     };
 
     // --- CLIENT-SIDE LOGIC (Sihirli Kısım) ---
@@ -124,7 +125,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     const handleDelete = async (copyId: number) => {
         if (!confirm("Silinsin mi?")) return;
         try {
-            await bookService.deleteCopy(copyId);
+            //await bookService.deleteCopy(copyId);
             // Backend'e tekrar sormadan listeden çıkar (Optimistic Update)
             setAllCopies(prev => prev.filter(c => c.id !== copyId));
             onUpdate();
@@ -182,7 +183,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                                 value={editForm.roomId}
                                                 onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value) })}
                                             >
-                                                {rooms.map(r => <option key={r.id} value={r.id}>{r.name || r.roomCode}</option>)}
+                                                {rooms.map(r => <option key={r.id} value={r.id}>{r.roomCode || r.description}</option>)}
                                             </select>
                                         ) : (
                                             <span className="text-stone-800">{copy.shelf?.room?.roomCode}</span>
