@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
-import Header from '@/src/components/ui/Header';
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -17,11 +17,18 @@ export default function LoginPage() {
         e.preventDefault();
         setError('');
         setLoading(true);
+        const toastId = toast.loading("Giriş işlemi yapılıyor.");
 
         try {
             await login({ email, password });
-            router.push('/');
+
+            toast.success("Giriş işlemi başarılıdır. Yönlendiriliyorsunuz...", { id : toastId});
+
+            setTimeout(() =>{
+                router.push('/');
+            },1500);
         } catch (err: any) {
+            toast.error("Giriş işlemi başarısız. Lütfen bilgilerinizi kontrol edin.", {id: toastId});
             setError(err.message || 'Giriş yapılırken bir hata oluştu.');
         } finally {
             setLoading(false);
@@ -29,63 +36,56 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
-            {/*<Header />*/}
+        <div className="min-h-screen flex items-center justify-center bg-[#f3e5d0] relative">
 
-            <main className="flex-1 flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-lg shadow-lg border border-amber-100 w-full max-w-md">
-                    <h2 className="text-2xl font-serif font-bold text-amber-950 mb-6 text-center border-b border-amber-100 pb-4">
-                        Giriş Yap
-                    </h2>
-
-                    {error && (
-                        <div className="bg-red-50 text-red-800 p-3 rounded mb-4 text-sm border border-red-200">
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">E-posta</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-black"
-                                placeholder="ornek@email.com"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">Şifre</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-500 text-black"
-                                placeholder="******"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-amber-900 text-amber-50 py-2 rounded font-serif font-bold hover:bg-amber-800 transition disabled:opacity-70"
-                        >
-                            {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
-                        </button>
-                    </form>
-
-                    <p className="mt-4 text-center text-sm text-stone-600">
-                        Hesabınız yok mu?{' '}
-                        <a href="/register" className="text-amber-800 font-bold hover:underline">
-                            Kayıt Ol
-                        </a>
-                    </p>
-                </div>
-            </main>
+            <div className="w-full max-w-md bg-[#f6dcb7] rounded-2xl shadow-xl shadow-[#b47b3c33] p-10 border border-[#c79f74]">
+                <h1 className="text-3xl font-semibold mb-6 text-[#2f1b10]">
+                    Kütüphane Sistemi Giriş
+                </h1>
+                <p className="text-sm text-[#5c4735] mb-4">
+                    Henüz üye değil misiniz?{" "}
+                    <a
+                        href="/register"
+                        className="font-semibold text-[#7a4c24] hover:text-[#5f391b]"
+                    >
+                        Hemen üye olun
+                    </a>
+                    .
+                </p>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="mt-2">
+                        <label className="block text-sm font-semibold text-[#4a2f1c] mb-1">
+                            E-posta
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-[#4a2f1c] mb-1">
+                            Şifre
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full inline-flex justify-center items-center rounded-md bg-[#7a4c24] px-4 py-2 text-sm font-semibold text-[#fdf3e6] hover:bg-[#5f391b] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
