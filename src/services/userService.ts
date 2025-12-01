@@ -25,7 +25,9 @@ export const userService = {
     },
 
     getUserById: async (id: string): Promise<UserViewDto> => {
-        const response = await axiosInstance.get(`${API_ROUTE_BASE}/get/${encodeURIComponent(id)}`);
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/get-details?id=${encodeURIComponent(id)}`, {
+            baseURL: ''
+        });
         return response.data;
     }
 }

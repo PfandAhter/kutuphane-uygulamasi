@@ -13,7 +13,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
     console.log("Rendering Pagination: ", { page, totalPages });
     if (totalPages <= 1) return null;
 
-    const hasPrevious = page > 0;
+    const hasPrevious = page > 1;
     const hasNext = page <= totalPages - 1;
 
     return (
