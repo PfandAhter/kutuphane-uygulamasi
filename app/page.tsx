@@ -1,5 +1,6 @@
 'use client';
 
+import {Suspense} from "react";
 import Header from "@/src/components/ui/Header";
 import Sidebar from "@/src/components/ui/Sidebar";
 import BookGrid from "@/src/components/ui/Book/BookGrid";
@@ -74,10 +75,14 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
-            <Header />
+            <Suspense fallback={<div>Yükleniyor...</div>}>
+                <Header />
+            </Suspense>
 
             <main className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
-                <Sidebar />
+                <Suspense fallback={<div>Yükleniyor...</div>}>
+                    <Sidebar />
+                </Suspense>
 
                 <section className="flex-1">
                     <ResultsInfo totalCount={totalCount} />
