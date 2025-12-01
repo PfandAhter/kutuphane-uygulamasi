@@ -11,7 +11,7 @@ import { BookFilterDto, Book } from "@/src/types/book";
 import { useSearchParams, useRouter } from "next/navigation";
 
 function HomeContent() {
-    const router = useRouter(); // URL değiştirmek için
+    const router = useRouter();
     const searchParams = useSearchParams();
     const paramsString = searchParams ? searchParams.toString() : "";
 
@@ -19,20 +19,19 @@ function HomeContent() {
     const page = parseInt(pageParam, 10) || 1;
     const size = 12;
 
-    //const [page, setPage] = useState(page);
-    const [books, setBooks] = useState<Book[]>([]); // Tipini Book[] yap
+    const [books, setBooks] = useState<Book[]>([]);
     const [totalCount, setTotalCount] = useState(0);
-    const [totalPages, setTotalPages] = useState(0); // Toplam sayfa sayısı state'i
+    const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    // Sayfa değiştirme fonksiyonu
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
+
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams?.toString());
-        console.log("Changing to page:", newPage);
         params.set("page", newPage.toString());
-
-        // URL'i güncelle (bu useEffect'i tetikleyecek ve veriyi yeniden çekecek)
         router.push(`?${params.toString()}`);
+        // Sayfa değişince mobilde filtreleri kapatıp yukarı kaydırabiliriz (isteğe bağlı)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     useEffect(() => {
@@ -41,7 +40,6 @@ function HomeContent() {
             categoryId: searchParams?.get("categoryId") ? parseInt(searchParams.get("categoryId") as string) : undefined,
             publicationYearFrom: searchParams?.get("yearMin") ? parseInt(searchParams.get("yearMin") as string) : undefined,
             publicationYearTo: searchParams?.get("yearMax") ? parseInt(searchParams.get("yearMax") as string) : undefined,
-            // ... diğer filtreler ...
             page: page,
             size: size
         };
@@ -52,14 +50,10 @@ function HomeContent() {
         (async () => {
             try {
                 const result = await bookService.getAllBooks(filter);
-
                 if (!mounted) return;
-
-                console.log("Fetched books:", result);
                 setBooks(result.items || []);
                 setTotalCount(result.totalCount || 0);
                 setTotalPages(result.totalPages || 0);
-
             } catch (error) {
                 console.error("Failed to fetch books:", error);
             } finally {
@@ -74,27 +68,44 @@ function HomeContent() {
 
     return (
         <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
-            <Suspense fallback={<div>Yükleniyor...</div>}>
+            <Suspense fallback={<div className="bg-white h-16 border-b border-stone-200"></div>}>
                 <Header />
             </Suspense>
 
-            <main className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
-                <Suspense fallback={<div>Yükleniyor...</div>}>
-                    <Sidebar />
-                </Suspense>
+            <main className="container mx-auto px-4 py-4 md:py-8 flex flex-col md:flex-row gap-4 md:gap-8 transition-all">
+                <div className="md:hidden mb-2">
+                    <button
+                        onClick={() => setShowMobileFilters(!showMobileFilters)}
+                        className="w-full flex items-center justify-center gap-2 bg-white border border-amber-200 text-amber-900 py-2 px-4 rounded-md font-serif font-bold shadow-sm hover:bg-amber-50 transition-colors"
+                    >
+                        <span>{showMobileFilters ? '✕ Filtreleri Gizle' : '▼ Filtrele ve Sırala'}</span>
+                    </button>
+                </div>
 
-                <section className="flex-1">
+                <div className={`
+                    ${showMobileFilters ? 'block' : 'hidden'} 
+                    md:block 
+                    w-full md:w-auto transition-all duration-300 ease-in-out
+                `}>
+                    <Suspense fallback={<div className="w-64 h-96 bg-stone-200 animate-pulse rounded-md"></div>}>
+                        <Sidebar />
+                    </Suspense>
+                </div>
+
+                <section className="flex-1 min-w-0">
                     <ResultsInfo totalCount={totalCount} />
 
-                    <BookGrid books={books} loading={loading} />
-
+                    <div className="mt-4">
+                        <BookGrid books={books} loading={loading} />
+                    </div>
                     {!loading && (
-                        <Pagination
-                            page={page}
-                            //setPage={setPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
+                        <div className="mt-8 flex justify-center">
+                            <Pagination
+                                page={page}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
                     )}
                 </section>
             </main>
@@ -104,7 +115,11 @@ function HomeContent() {
 
 export default function Home() {
     return (
-        <Suspense fallback={<div className="flex justify-center p-10">Yükleniyor...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen bg-stone-100 flex items-center justify-center">
+                <div className="text-amber-900 font-serif animate-pulse">Yükleniyor...</div>
+            </div>
+        }>
             <HomeContent />
         </Suspense>
     );
