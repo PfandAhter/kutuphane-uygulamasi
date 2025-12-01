@@ -1,0 +1,25 @@
+import { NextRequest, NextResponse } from 'next/server';
+import axios from 'axios';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+export async function POST(request: NextRequest) {
+    try {
+        const authHeader = request.headers.get("Authorization");
+        const body = await request.json();
+        console.log("Proxy GET /api/fine/assign called")
+        await axios.post(`${API_BASE_URL}/api/Fine/issue`, body, {
+            headers: {
+                "Content-Type": "application/json",
+                ...(authHeader && { "Authorization": authHeader })
+            }
+        });
+
+        console.log("Proxy GET /api/fine/assign successful");
+        return NextResponse.json({ success: true }, { status: 200 });
+    } catch (err: any) {
+        console.error("Proxy POST /api/Fine/issue", err);
+        const status = err.response?.status || 500;
+        return NextResponse.json(err.response?.data || { error: "Failed" }, { status });
+    }
+}

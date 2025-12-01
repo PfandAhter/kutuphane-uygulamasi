@@ -1,5 +1,5 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import {UserFilterDto, UserViewDto} from "@/src/types/user";
+import { UserFilterDto, UserViewDto } from "@/src/types/user";
 import {PaginatedResult} from "@/src/types/book";
 
 const API_ROUTE_BASE = "/api/user";
