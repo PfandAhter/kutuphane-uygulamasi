@@ -232,7 +232,7 @@ export default function AddBookPage() {
                 const copyDto: CreateCopyBookDto = {
                     bookId: response.id,
                     roomId: parseInt(form.roomId),
-                    shelfCode: parseInt(form.shelfId),
+                    shelfCode: form.shelfId,
                     barcodeNumber: form.barcodeNumber
                 };
 
