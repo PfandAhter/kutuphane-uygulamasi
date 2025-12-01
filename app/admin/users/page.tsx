@@ -73,6 +73,10 @@ export default function UsersPage() {
         fetchUsers();
     };
 
+    const handleUpdateSuccess = () => {
+        fetchUsers();
+    };
+
     const handleClear = () => {
         const emptyFilters = { firstName: "", lastName: "", email: "", role: "", hasFine: "all" };
         setFilters(emptyFilters);
@@ -82,10 +86,8 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-8">
-            {/* 1. İstatistikler */}
             <UserStats totalCount={totalCount} />
 
-            {/* 2. Filtreleme */}
             <UserFilterBar
                 filters={filters}
                 onFilterChange={handleFilterChange}
@@ -93,14 +95,12 @@ export default function UsersPage() {
                 onClear={handleClear}
             />
 
-            {/* 3. Tablo */}
             <UsersTable
                 users={users}
                 loading={loading}
                 onDetailClick={(user) => { setSelectedUser(user); setIsDetailOpen(true); }}
             />
 
-            {/* 4. Sayfalama */}
             <PaginationControls
                 currentPage={page}
                 totalCount={totalCount}
@@ -113,6 +113,7 @@ export default function UsersPage() {
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
                 user={selectedUser}
+                onUpdate={handleUpdateSuccess}
             />
         </div>
     );
