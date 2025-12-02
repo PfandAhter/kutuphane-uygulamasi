@@ -255,13 +255,13 @@ export default function AdminAuthorsPage() {
                                 <label className="block text-xs font-bold text-stone-600 mb-1">Ad</label>
                                 <input type="text" required value={newAuthor.firstName}
                                        onChange={e => setNewAuthor({...newAuthor, firstName: e.target.value})}
-                                       className="w-full border p-2 rounded text-sm focus:border-amber-500 outline-none"/>
+                                       className="w-full border p-2 rounded text-sm text-black focus:border-amber-500 outline-none"/>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-stone-600 mb-1">Soyad</label>
                                 <input type="text" required value={newAuthor.lastName}
                                        onChange={e => setNewAuthor({...newAuthor, lastName: e.target.value})}
-                                       className="w-full border p-2 rounded text-sm focus:border-amber-500 outline-none"/>
+                                       className="w-full border p-2 rounded text-sm text-black focus:border-amber-500 outline-none"/>
                             </div>
                             <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
                                 <button type="button" onClick={() => setIsAddModalOpen(false)}
