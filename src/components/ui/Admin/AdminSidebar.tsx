@@ -41,7 +41,7 @@ const menuItems: MenuItem[] = [
         title: 'Ödünç & İade',
         icon: '⏳',
         subItems: [
-            {title: 'Aktif Ödünçler', path: '/admin/loans'},
+            {title: 'Aktif Ödünçler', path: '/admin/loans/active'},
             {title: 'Geçmiş İşlemler', path: '/admin/loans/history'},
             {title: 'Gecikmiş İadeler', path: '/admin/loans/overdue'}
         ]
