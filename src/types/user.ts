@@ -1,3 +1,5 @@
+import { LoanInfo } from "@/src/types/loan";
+
 export interface UserViewDto {
     id: string;
     firstName: string;
@@ -20,4 +22,16 @@ export interface UserFilterDto {
     hasFine?: boolean;
     page: number;
     size: number;
+}
+
+export interface UserFineDto{
+    fineId: number;
+    amount: number;
+    status: string;
+    isActive: boolean;
+    issuedDate: string;
+    fineType: string;
+    description: string;
+
+    loanDetails?: LoanInfo;
 }

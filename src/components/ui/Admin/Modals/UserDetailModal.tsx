@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import {useRouter} from "next/navigation";
 import toast from 'react-hot-toast';
 import { UserViewDto } from '@/src/types/user';
 import { FineType, AssignFineDto } from '@/src/types/fine';
@@ -17,6 +18,7 @@ interface Props {
 type ViewMode = 'details' | 'assignFine';
 
 export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Props) {
+    const router = useRouter();
     const [userDetail, setUserDetail] = useState<UserViewDto | null>(user);
     const [loading, setLoading] = useState(false);
 
@@ -113,19 +115,11 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
         }
     };
 
-    const handlePayFine = async () => {
-        if (!confirm("Cezayı kaldırmak istediğinize emin misiniz?")) return;
-        setActionLoading(true);
-        try {
-            await fineService.payFine(userDetail!.id);
-            toast.success("Ceza kaldırıldı.");
-            if (userDetail) setUserDetail({ ...userDetail, hasFine: false });
-            onUpdate();
-        } catch (error) {
-            toast.error("İşlem başarısız.");
-        } finally {
-            setActionLoading(false);
-        }
+    const handleGoToFinePage = () => {
+        if (!userDetail?.email) return toast.error("Kullanıcı e-postası bulunamadı.");
+        onClose();
+
+        router.push(`/admin/users/banned?email=${encodeURIComponent(userDetail.email)}`);
     };
 
     if (!isOpen || !userDetail) return null;
@@ -192,10 +186,15 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                     {userDetail.hasFine ? <span className="font-bold text-red-700 text-sm">🚫 Cezalı</span> : <span className="font-bold text-green-700 text-sm">✅ Temiz</span>}
                                 </div>
 
-                                <div className="pt-2 flex flex-col gap-3">
+                                <div className="pt-2 flex flex-col gap-3"> {/*TODO: Burada Hasfine kismi kaldirilacak, kullanicinin cezalari burada gorunmeyecektir.*/}
                                     {userDetail.hasFine ? (
-                                        <button onClick={handlePayFine} disabled={actionLoading} className="w-full border border-green-600 text-green-700 bg-green-50 py-2.5 rounded text-sm font-bold hover:bg-green-100 transition disabled:opacity-50">
-                                            <span>💸</span> Cezayı Öde / Kaldır
+                                        // DEĞİŞTİ: Artık direkt ödeme yapmıyor, sayfaya yönlendiriyor.
+                                        <button
+                                            onClick={handleGoToFinePage}
+                                            disabled={actionLoading}
+                                            className="w-full border border-stone-300 text-stone-700 bg-white py-2.5 rounded text-sm font-bold hover:bg-stone-50 hover:text-stone-900 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            <span>🔍</span> Cezayı Görüntüle / Yönet
                                         </button>
                                     ) : (
                                         <button onClick={() => setViewMode('assignFine')} disabled={actionLoading} className="w-full border border-red-300 text-red-700 bg-white py-2.5 rounded text-sm font-bold hover:bg-red-50 transition disabled:opacity-50">
