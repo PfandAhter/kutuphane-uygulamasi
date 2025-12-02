@@ -25,12 +25,7 @@ export default function ActiveLoansPage() {
         setLoading(true);
         try {
             const result = await loanService.getAllActiveLoans(page, pageSize);
-            const activeItems = result.items.filter(item => item.isActive === true);
-
-            setData({
-                ...result,
-                items: activeItems,
-            });
+            setData(result);
         } catch (error) {
             toast.error("Veriler yüklenemedi.");
         } finally {
