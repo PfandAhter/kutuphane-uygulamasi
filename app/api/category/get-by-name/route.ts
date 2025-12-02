@@ -23,8 +23,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
         console.error("Proxy Category Search Error:", err?.message);
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Copy creation failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Category Get-By-Name işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

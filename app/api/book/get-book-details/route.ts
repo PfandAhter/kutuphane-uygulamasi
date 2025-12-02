@@ -23,12 +23,16 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(response.data, { status: 200 });
 
-    } catch (error: any) {
-        console.error("Proxy GET Error:", error?.response?.data || error.message);
+    } catch (err: any) {
+        console.error("Proxy GET Error:", err?.response?.data || err.message);
 
-        const status = error.response?.status || 500;
-        const message = error.response?.data?.message || "Kitap detayları alınamadı.";
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Kitap detayları alınamadı." }, { status: err.response.status });
+        }
 
-        return NextResponse.json({ error: message }, { status });
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

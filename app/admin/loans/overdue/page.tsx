@@ -25,11 +25,12 @@ export default function OverdueLoansPage() {
         setLoading(true);
         try {
             const result = await loanService.getOverdueLoans(page, pageSize);
-            const overdueItems = result.items.filter(item => item.isActive === false);
+            /*const overdueItems = result.items.filter(item => item.isActive === false); //TODO: Burasi boyle degilmis degisecek...
             setData({
                 ...result,
                 items: overdueItems,
-            });
+            });*/
+            setData(result);
         } catch (error) {
             toast.error("Gecikmiş iadeler yüklenemedi.");
         } finally {

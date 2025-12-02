@@ -20,7 +20,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (err: any) {
         console.error("Proxy Fine Pay Error:", err?.message);
-        const status = err.response?.status || 500;
-        return NextResponse.json(err.response?.data || { error: "Failed" }, { status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Fine Pay işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

@@ -22,13 +22,13 @@ export async function GET(request: NextRequest) {
         })
     } catch (err: any) {
         console.error("Proxy GET /api/publisher/list error: ", err?.message);
-
-        const status = err.response?.status || 500;
-
-        if (status === 404) {
-            return NextResponse.json(null, { status: 200 });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Publisher List işlemi başarısız." }, { status: err.response.status });
         }
-        const data = err.response?.data || { error: "Publisher Listeleme işlemi başarısız." };
-        return NextResponse.json(data, { status: status });
+
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

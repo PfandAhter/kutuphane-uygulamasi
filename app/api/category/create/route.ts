@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response.data, { status: 201 });
     } catch (err: any) {
         console.error("Proxy Category Add Error:", err?.message);
-        const status = err.response?.status || 500;
-
-        if (status === 404) {
-            return NextResponse.json(null, { status: 200 });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Category Create işlemi başarısız." }, { status: err.response.status });
         }
-        const data = err.response?.data || { error: "Category Create işlemi başarısız." };
-        return NextResponse.json(data, { status: status });
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

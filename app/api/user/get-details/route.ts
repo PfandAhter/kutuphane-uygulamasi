@@ -19,13 +19,16 @@ export async function GET(request: NextRequest) {
                 ...(authHeader && { "Authorization": authHeader })
             }
         });
-
+        console.log("Proxy GET /api/users/get-details successful.");
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
-        console.error(`Proxy User Details Error:`, err?.message);
-
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "User fetch failed" };
-        return NextResponse.json(data, { status: status });
+        console.error(`Proxy GET /api/users/get-details error: `, err?.message);
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "User Get-Details işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

@@ -20,10 +20,14 @@ export async function GET(request:NextRequest){
         console.log("Proxy GET /api/loans/active successful");
         return NextResponse.json(response.data, { status: 200 });
     }catch(err:any){
-        console.error("Proxy Loans Active Error:", err);
+        console.error("Proxy GET /api/loans/active error: ", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Loans active fetch failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Loans Active Get işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

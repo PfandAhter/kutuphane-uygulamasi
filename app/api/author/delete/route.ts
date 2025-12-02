@@ -21,8 +21,12 @@ export async function DELETE(request: NextRequest) {
     } catch (err: any) {
         console.error("Proxy DELETE /api/author/delete Error:", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Author Delete failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Author Delete failed" }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

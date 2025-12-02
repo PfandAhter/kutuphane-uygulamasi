@@ -17,8 +17,15 @@ export async function POST(request: NextRequest) {
         console.log("Proxy POST /api/auth/register called successfully");
 
         return NextResponse.json(response.data, {status: 200});
-    } catch (err) {
+    } catch (err: any) {
         console.error("Proxy POST /api/auth/register error:", err);
-        return NextResponse.json({error: "Kayıt başarısız."}, {status: 401});
+        if (err.response) {
+            return NextResponse.json(err.response.data, { status: err.response.status });
+        }
+
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

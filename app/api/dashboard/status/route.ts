@@ -16,14 +16,14 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
-        console.error("Dashboard Stats Error:", err?.message);
+        console.error("Dashboard Status Get Error:", err?.message);
 
-        const status = err.response?.status || 500;
-
-        if (status === 404) {
-            return NextResponse.json(null, { status: 200 });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Dashboard Status Get işlemi başarısız." }, { status: err.response.status });
         }
-        const data = err.response?.data || { error: "Dashboard status get işlemi başarısız." };
-        return NextResponse.json(data, { status: status });
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

@@ -25,7 +25,7 @@ export default function OverdueLoansPage() {
         setLoading(true);
         try {
             const result = await loanService.getHistoryLoans(page, pageSize);
-            const overdueItems = result.items.filter(item => {
+            /*const overdueItems = result.items.filter(item => {
                 const isNotReturned = item.isActive === true || item.actualReturnDate === null;
 
                 const expectedDate = new Date(item.expectedReturnDate);
@@ -36,7 +36,8 @@ export default function OverdueLoansPage() {
             setData({
                 ...result,
                 items: overdueItems,
-            });
+            });*/
+            setData(result);
         } catch (error) {
             toast.error("Gecikmiş iadeler yüklenemedi.");
         } finally {

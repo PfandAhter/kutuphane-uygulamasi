@@ -20,7 +20,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response.data, { status: 201 });
     } catch (err: any) {
         console.error("Proxy Author Add Error:", err?.message);
-        const status = err.response?.status || 500;
-        return NextResponse.json(err.response?.data || { error: "Failed" }, { status });
+
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Author Add işlemi başarısız." }, { status: err.response.status });
+        }
+
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

@@ -11,7 +11,7 @@ export async function GET(request:NextRequest){
         console.log("Proxy GET /api/loans/history called with query:", query);
 
         const authHeader = request.headers.get("Authorization");
-        const response = await axios.get(`${API_ROUTE_URL}/api/Loan/get-all-loans${query}`,{
+        const response = await axios.get(`${API_ROUTE_URL}/api/Loan/returned${query}`,{
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })
@@ -20,10 +20,13 @@ export async function GET(request:NextRequest){
         console.log("Proxy GET /api/loans/history successful");
         return NextResponse.json(response.data, { status: 200 });
     }catch(err:any){
-        console.error("Proxy Loans History Error:", err);
-
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Loans history fetch failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        console.error("Proxy GET /api/loans/history error: ", err?.message);
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Loans History Get işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

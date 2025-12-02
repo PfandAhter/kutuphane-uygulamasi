@@ -28,12 +28,13 @@ export async function GET(request: NextRequest) {
     } catch (err: any) {
         console.error("Proxy Search Error:", err?.message);
 
-        const status = err.response?.status || 500;
-
-        if (status === 404) {
-            return NextResponse.json(null, { status: 200 });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Book Get-By-Name işlemi başarısız." }, { status: err.response.status });
         }
-        const data = err.response?.data || { error: "Book Arama işlemi başarısız." };
-        return NextResponse.json(data, { status: status });
+
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

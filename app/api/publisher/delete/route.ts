@@ -20,10 +20,14 @@ export async function DELETE(request: NextRequest) {
         console.log("Proxy DELETE /api/publisher/delete successful for ID:", id);
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (err: any) {
-        console.error("Publisher Delete Error:", err?.message);
+        console.error("Proxy DElETE /api/publisher/delete error: ", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Copy creation failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Publisher Delete işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

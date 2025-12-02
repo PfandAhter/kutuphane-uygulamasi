@@ -23,8 +23,12 @@ export async function PUT(request: NextRequest) {
     } catch (err: any) {
         console.log("Proxy Category Update Error:", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Copy creation failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Category Update işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

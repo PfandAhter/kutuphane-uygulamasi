@@ -18,8 +18,14 @@ export async function GET(){
 
         console.log("Proxy GET /api/category/list called successfully");
         return NextResponse.json(response.data);
-    }catch(err){
-        console.error("Proxy GET /api/category/list error:", err);
-        return NextResponse.json({ error: "Failed to fetch categories" }, { status: 404 });
+    }catch(err: any){
+        console.error("Proxy GET /api/category/list error:", err?.message);
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Category List işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

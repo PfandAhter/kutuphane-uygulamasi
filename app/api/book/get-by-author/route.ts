@@ -20,12 +20,15 @@ export async function GET(request: NextRequest) {
         });
 
         return NextResponse.json(response.data, { status: 200 });
-    } catch (error: any) {
-        console.error("Proxy List Error:", error?.message);
+    } catch (err: any) {
+        console.error("Proxy List Error:", err?.message);
 
-        const status = error.response?.status || 500;
-        const message = error.response?.data?.message || "Kitap listesi alınırken hata oluştu.";
-
-        return NextResponse.json({ error: message }, { status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Kitap listesi alınırken hata oluştu." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }
