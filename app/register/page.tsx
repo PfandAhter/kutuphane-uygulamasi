@@ -18,6 +18,16 @@ export default function RegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // --- PAROLA KONTROL MANTIĞI ---
+    const password = formData.password;
+    const hasUpperCase = /[A-Z]/.test(password); // Büyük harf kontrolü
+    const hasNumber = /[0-9]/.test(password);    // Sayı kontrolü
+    // Özel karakter kontrolü (Noktalama işaretleri ve semboller)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    // Tüm şartlar sağlanıyor mu?
+    const isPasswordValid = hasUpperCase && hasNumber && hasSpecialChar;
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
             ...formData,
@@ -28,6 +38,13 @@ export default function RegisterPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // 1. Parola Kontrolü (Submit öncesi güvenlik)
+        if (!isPasswordValid) {
+            toast.error("Lütfen parola gereksinimlerini karşılayınız.");
+            return;
+        }
+
         const toastId = toast.loading("Kayıt işlemi başlatılıyor.")
         setLoading(true);
 
@@ -64,9 +81,11 @@ export default function RegisterPage() {
                                 Ad
                             </label>
                             <input
+                                name="firstName"
                                 type="text"
                                 value={formData.firstName}
-                                onChange={(e) => handleChange(e)}
+                                onChange={handleChange}
+                                placeholder={"Adınız"}
                                 className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                                 required
                             />
@@ -76,9 +95,11 @@ export default function RegisterPage() {
                                 Soyad
                             </label>
                             <input
+                                name="lastName"
                                 type="text"
                                 value={formData.lastName}
-                                onChange={(e) => handleChange(e)}
+                                onChange={handleChange}
+                                placeholder={"Soyadınızı girin"}
                                 className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                                 required
                             />
@@ -90,9 +111,10 @@ export default function RegisterPage() {
                             Telefon Numarası
                         </label>
                         <input
+                            name="phoneNumber"
                             type="tel"
                             value={formData.phoneNumber}
-                            onChange={(e) => handleChange(e)}
+                            onChange={handleChange}
                             placeholder="5xx xxx xx xx"
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
@@ -104,35 +126,55 @@ export default function RegisterPage() {
                             E-posta
                         </label>
                         <input
+                            name="email"
                             type="email"
                             value={formData.email}
-                            onChange={(e) => handleChange(e)}
+                            onChange={handleChange}
+                            placeholder={"ornek@gmail.com"}
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                        <div className="flex flex-col">
                             <label className="block text-sm font-semibold text-[#4a2f1c] mb-1">
                                 Parola
                             </label>
                             <input
+                                name="password"
                                 type="password"
                                 value={formData.password}
-                                onChange={(e) => handleChange(e)}
-                                className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
+                                onChange={handleChange}
+                                placeholder={"Parolanızı girin"}
+                                className={`w-full rounded-md border px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 
+                                ${!isPasswordValid && formData.password.length > 0 ? 'border-red-400 focus:ring-red-400' : 'border-[#b2824b] focus:ring-[#a15c2f]'}`}
                                 required
                             />
+
+                            {/* --- PAROLA GEREKSİNİMLERİ GÖSTERGESİ --- */}
+                            <div className="mt-2 text-xs space-y-1 bg-[#f6dcb7] p-2 rounded border border-[#c79f74]">
+                                <p className={`flex items-center text-black gap-1.5 transition-colors ${hasUpperCase ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
+                                    <span className="text-[10px]">{hasUpperCase ? '✔' : '○'}</span> En az 1 büyük harf
+                                </p>
+                                <p className={`flex items-center text-black gap-1.5 transition-colors ${hasNumber ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
+                                    <span className="text-[10px]">{hasNumber ? '✔' : '○'}</span> En az 1 rakam
+                                </p>
+                                <p className={`flex items-center text-black gap-1.5 transition-colors ${hasSpecialChar ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
+                                    <span className="text-[10px]">{hasSpecialChar ? '✔' : '○'}</span> En az 1 özel karakter (!@#$...)
+                                </p>
+                            </div>
                         </div>
+
                         <div>
                             <label className="block text-sm font-semibold text-[#4a2f1c] mb-1">
                                 Doğum Tarihi
                             </label>
                             <input
+                                name="dateOfBirth"
                                 type="date"
                                 value={formData.dateOfBirth}
-                                onChange={(e) => handleChange(e)}
+                                onChange={handleChange}
                                 className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                                 required
                             />
@@ -141,7 +183,7 @@ export default function RegisterPage() {
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading} // isPasswordValid false ise butonu disable etmek istersen: disabled={loading || !isPasswordValid}
                         className="w-full inline-flex justify-center items-center rounded-md bg-[#7a4c24] px-4 py-2 text-sm font-semibold text-[#fdf3e6] hover:bg-[#5f391b] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >
                         {loading ? "Kayıt yapılıyor..." : "Üye Ol"}
