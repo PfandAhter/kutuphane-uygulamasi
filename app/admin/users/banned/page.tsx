@@ -1,231 +1,280 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import StatCard from '@/src/components/ui/Admin/StatCard'; // StatCard bileşenin olduğunu varsayıyorum
+import React, { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
+import StatCard from '@/src/components/ui/Admin/StatCard';
+import { fineService } from '@/src/services/fineService';
+import { UserFineDto } from '@/src/types/user';
 
-// --- TİP TANIMLARI ---
-// (İleride src/types/user.ts içine taşıyabilirsin)
-interface BannedUser {
-    id: number;
-    userId: number;
-    fullName: string;
-    email: string;
-    profileImage?: string;
-    reason: string; // Ceza sebebi
-    startDate: string; // YYYY-MM-DD
-    endDate: string | null; // Null ise süresiz/kalıcı
-    status: 'Active' | 'Expired';
-    penaltyAmount?: number; // Varsa para cezası
-}
+// Modallar
+import FineDetailModal from '@/src/components/ui/Admin/Modals/FineDetailModal';
+import GenericConfirmModal from '@/src/components/ui/Admin/Modals/GenericConfirmationModal';
 
-// --- MOCK DATA ---
-const MOCK_BANNED_USERS: BannedUser[] = [
-    {
-        id: 1, userId: 101, fullName: "Mehmet Yılmaz", email: "mehmet@gmail.com",
-        reason: "Kitaplara zarar verme", startDate: "2023-11-01", endDate: null, status: "Active"
-    },
-    {
-        id: 2, userId: 105, fullName: "Ayşe Kaya", email: "ayse@hotmail.com",
-        reason: "Sürekli geç getirme (3+ defa)", startDate: "2023-11-20", endDate: "2023-12-20", status: "Active", penaltyAmount: 45
-    },
-    {
-        id: 3, userId: 112, fullName: "Caner Erkin", email: "caner@test.com",
-        reason: "Kütüphane kurallarına aykırı davranış", startDate: "2023-11-25", endDate: "2023-11-30", status: "Active"
-    },
-    {
-        id: 4, userId: 120, fullName: "Zeynep Demir", email: "zeynep@site.com",
-        reason: "Kaybolan kitap (Ödeme bekleniyor)", startDate: "2023-10-15", endDate: "2024-01-15", status: "Active", penaltyAmount: 150
-    },
-];
+function BannedUsersContent() {
+    const searchParams = useSearchParams();
+    const [fines, setFines] = useState<UserFineDto[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [searchEmail, setSearchEmail] = useState("");
 
-export default function BannedUsersPage() {
-    const [users, setUsers] = useState<BannedUser[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+    // Modal States
+    const [selectedFine, setSelectedFine] = useState<UserFineDto | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isRevokeConfirmOpen, setIsRevokeConfirmOpen] = useState(false);
 
-    // --- VERİ ÇEKME SİMÜLASYONU ---
-    useEffect(() => {
-        // TODO: userService.getBannedUsers() servisi buraya bağlanacak
-        const fetchData = async () => {
-            setLoading(true);
-            await new Promise(r => setTimeout(r, 800)); // Loading efekti için bekleme
-            setUsers(MOCK_BANNED_USERS);
+    const totalDebt = fines.filter(f => f.isActive).reduce((acc, curr) => acc + curr.amount, 0);
+    const activeFinesCount = fines.filter(f => f.isActive).length;
+
+    const performSearch = async (email: string) => {
+        if (!email.trim()) return;
+
+        setLoading(true);
+        try {
+            const data = await fineService.getUserFinesByEmail(email);
+            if (data.length === 0) toast("Kayıt bulunamadı.", { icon: 'ℹ️' });
+            setFines(data);
+        } catch (error) {
+            toast.error("Cezalar getirilirken hata oluştu.");
+            setFines([]);
+        } finally {
             setLoading(false);
-        };
-        fetchData();
-    }, []);
-
-    // --- ARAMA FİLTRESİ ---
-    const filteredUsers = users.filter(user =>
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // --- YARDIMCI FONKSİYONLAR ---
-
-    // Kalan günü hesapla
-    const getDaysRemaining = (endDate: string | null) => {
-        if (!endDate) return "Süresiz";
-        const end = new Date(endDate);
-        const today = new Date();
-        const diffTime = Math.abs(end.getTime() - today.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        // Tarih geçmişse
-        if (end < today) return "Süresi Doldu";
-        return `${diffDays} Gün`;
+        }
     };
 
-    // Cezayı Kaldır İşlemi
-    const handleRevokeBan = (id: number, name: string) => {
-        if(confirm(`${name} kullanıcısının cezasını kaldırmak istediğinize emin misiniz?`)) {
-            // TODO: await userService.revokeBan(id);
-            setUsers(prev => prev.filter(u => u.id !== id));
-            alert("Ceza kaldırıldı.");
+    const handleSearchClick = async () => {
+        if (!searchEmail.trim()) {
+            toast.error("Lütfen bir e-posta adresi giriniz.");
+            return;
         }
+        await performSearch(searchEmail);
+    };
+
+    useEffect(() => {
+        const emailFromUrl = searchParams.get('email');
+        if (emailFromUrl) {
+            setSearchEmail(emailFromUrl);
+            performSearch(emailFromUrl);
+        }
+    }, [searchParams]);
+
+    const handleSearch = async () => {
+        if (!searchEmail.trim()) {
+            toast.error("Lütfen bir e-posta adresi giriniz.");
+            return;
+        }
+        setLoading(true);
+        try {
+            const data = await fineService.getUserFinesByEmail(searchEmail);
+            if (data.length === 0) toast("Kayıt bulunamadı.", { icon: 'ℹ️' });
+            setFines(data);
+        } catch (error) {
+            toast.error("Cezalar getirilirken hata oluştu.");
+            setFines([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSearch();
+    };
+
+    // --- MODAL TETİKLEYİCİLER ---
+
+    // Detay Aç
+    const openDetailModal = (fine: UserFineDto) => {
+        setSelectedFine(fine);
+        setIsDetailOpen(true);
+    };
+
+    // İptal Onayını Aç
+    const openRevokeModal = (fine: UserFineDto) => {
+        setSelectedFine(fine);
+        setIsRevokeConfirmOpen(true);
+    };
+
+    // --- ASIL İŞLEM (GenericConfirmModal çağıracak) ---
+    const handleConfirmRevoke = async () => {
+        if (!selectedFine) return;
+
+        try {
+            await fineService.revokeFineById(selectedFine.fineId);
+            toast.success("Ceza kaldırıldı/iptal edildi.");
+
+            // Listeyi güncelle
+            setFines(prev => prev.map(f =>
+                f.fineId === selectedFine.fineId ? { ...f, isActive: false, status: 'Cancelled' } : f
+            ));
+            // Veya listeden tamamen silmek istersen:
+            // setFines(prev => prev.filter(f => f.fineId !== selectedFine.fineId));
+
+        } catch (error) {
+            toast.error("İşlem başarısız.");
+            throw error; // Modala hata olduğunu bildirir
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
     return (
         <div className="space-y-8">
-            {/* Header ve İstatistikler */}
+            {/* Header & Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-4 flex justify-between items-end mb-2">
-                    <div>
-                        <h1 className="text-2xl font-bold text-stone-800 font-serif">Cezalı Üyeler</h1>
-                        <p className="text-stone-500 text-sm">Ceza veya kısıtlama almış üyelerin yönetimi.</p>
-                    </div>
-                    <button className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors">
-                        ⚠️ Ceza Ata
-                    </button>
+                <div className="md:col-span-4 mb-2">
+                    <h1 className="text-2xl font-bold text-stone-800 font-serif">Ceza Sorgulama</h1>
+                    <p className="text-stone-500 text-sm">Kullanıcı bazlı ceza ve borç takibi.</p>
                 </div>
-
-                {/* İstatistik Kartları */}
-                <StatCard
-                    title="Toplam Cezalı"
-                    value={users.length}
-                    icon="🚫"
-                    trend="+2 bu hafta"
-                    trendDirection="down" // Kötü bir şey olduğu için kırmızı/down
-                />
-                <StatCard
-                    title="Süresiz Yasaklı"
-                    value={users.filter(u => u.endDate === null).length}
-                    icon="🔒"
-                />
-                <StatCard
-                    title="Bekleyen Ödeme"
-                    value={`${users.reduce((acc, curr) => acc + (curr.penaltyAmount || 0), 0)} TL`}
-                    icon="💰"
-                    trend="Tahsil edilecek"
-                />
+                <StatCard title="Toplam Kayıt" value={fines.length} icon="📋" trend={fines.length > 0 ? "Sonuçlar" : "-"} />
+                <StatCard title="Aktif Cezalar" value={activeFinesCount} icon="🚫" trendDirection={activeFinesCount > 0 ? "down" : "up"} />
+                <StatCard title="Toplam Borç" value={`${totalDebt} TL`} icon="💰" trend="Tahsil Edilecek" />
             </div>
 
-            {/* Arama ve Tablo Alanı */}
-            <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
+            {/* Arama */}
+            <div className="bg-white p-5 rounded-lg border border-stone-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Kullanıcı E-posta Adresi Giriniz..."
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 text-stone-800"
+                    />
+                </div>
+                <button onClick={handleSearchClick} disabled={loading} className="bg-stone-800 hover:bg-stone-900 text-stone-100 px-8 py-3 rounded text-sm font-bold shadow-sm disabled:opacity-70 transition-colors">
+                    {loading ? '...' : 'Sorgula'}
+                </button>
+            </div>
 
-                {/* Toolbar */}
-                <div className="p-4 border-b border-stone-100 flex gap-4 bg-stone-50">
-                    <div className="relative flex-1 max-w-md">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
-                        <input
-                            type="text"
-                            placeholder="İsim veya E-posta ara..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border text-black rounded text-sm focus:outline-none focus:border-amber-500"
-                        />
+            {/* Tablo */}
+            {fines.length > 0 && (
+                <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+                    <div className="p-4 bg-stone-50 border-b border-stone-200">
+                        <h3 className="font-bold text-stone-700">
+                            Sonuçlar: <span className="text-amber-700">{searchEmail}</span>
+                        </h3>
                     </div>
 
-                    <select className="border border-stone-300 rounded px-3 py-2 text-sm text-stone-600 focus:outline-none focus:border-amber-500 bg-white">
-                        <option>Tüm Durumlar</option>
-                        <option>Süresi Dolanlar</option>
-                        <option>Kalıcı Yasaklar</option>
-                    </select>
-                </div>
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-stone-100 text-stone-500 uppercase text-xs border-b border-stone-200">
+                        <tr>
+                            <th className="px-6 py-3">Kullanıcı</th>
+                            <th className="px-6 py-3">Ceza Nedeni</th>
+                            <th className="px-6 py-3">Tarih</th>
+                            <th className="px-6 py-3 text-center">Tutar</th>
+                            <th className="px-6 py-3 text-center">Durum</th>
+                            <th className="px-6 py-3 text-right">İşlemler</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100">
+                        {fines.map((fine) => (
+                            <tr key={fine.fineId} className={`transition-colors ${fine.isActive ? 'hover:bg-red-50/30' : 'hover:bg-stone-50'}`}>
 
-                {/* Tablo */}
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-stone-100 text-stone-500 uppercase text-xs border-b border-stone-200">
-                    <tr>
-                        <th className="px-6 py-3">Üye Bilgisi</th>
-                        <th className="px-6 py-3">Ceza Sebebi</th>
-                        <th className="px-6 py-3">Başlangıç</th>
-                        <th className="px-6 py-3">Bitiş / Kalan</th>
-                        <th className="px-6 py-3 text-center">Ceza Tutarı</th>
-                        <th className="px-6 py-3 text-right">İşlemler</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100">
-                    {loading && (
-                        <tr><td colSpan={6} className="px-6 py-12 text-center text-stone-500">Yükleniyor...</td></tr>
-                    )}
+                                {/* Kullanıcı Adı*/}
+                                <td className="px-6 py-4 font-medium text-stone-800">
+                                    {searchEmail}
+                                </td>
 
-                    {!loading && filteredUsers.length === 0 && (
-                        <tr><td colSpan={6} className="px-6 py-12 text-center text-stone-500 italic">Cezalı üye bulunamadı.</td></tr>
-                    )}
-
-                    {!loading && filteredUsers.map((user) => {
-                        const daysLeft = getDaysRemaining(user.endDate);
-                        const isPermanent = user.endDate === null;
-
-                        return (
-                            <tr key={user.id} className="hover:bg-red-50/30 transition-colors">
+                                {/* Neden / Kitap */}
                                 <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold text-xs">
-                                            {user.fullName.charAt(0)}
-                                        </div>
+                                    {fine.loanDetails ? (
                                         <div>
-                                            <div className="font-bold text-stone-800">{user.fullName}</div>
-                                            <div className="text-xs text-stone-500">{user.email}</div>
+                                            <div className="font-bold text-stone-800 text-sm flex items-center gap-2">
+                                                📚 {fine.loanDetails.bookTitle}
+                                            </div>
+                                            <div className="text-xs text-stone-500 mt-1">Gecikme Cezası</div>
                                         </div>
-                                    </div>
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    <span className="text-stone-700 font-medium">{user.reason}</span>
-                                </td>
-
-                                <td className="px-6 py-4 text-stone-600">
-                                    {user.startDate}
-                                </td>
-
-                                <td className="px-6 py-4">
-                                    {isPermanent ? (
-                                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold border border-red-200">
-                                                KALICI YASAK
-                                            </span>
                                     ) : (
-                                        <div className="flex flex-col">
-                                            <span className="text-stone-800 font-medium">{user.endDate}</span>
-                                            <span className="text-xs text-amber-600 font-bold">({daysLeft} kaldı)</span>
-                                        </div>
+                                        <div className="text-stone-700">{fine.fineType}</div>
                                     )}
                                 </td>
 
+                                <td className="px-6 py-4 text-stone-600">{formatDate(fine.issuedDate)}</td>
+
                                 <td className="px-6 py-4 text-center">
-                                    {user.penaltyAmount ? (
-                                        <span className="text-stone-800 font-mono font-bold">{user.penaltyAmount} TL</span>
+                                        <span className="font-mono font-bold text-stone-800 text-lg">
+                                            {fine.amount > 0 ? `${fine.amount} ₺` : '-'}
+                                        </span>
+                                </td>
+
+                                <td className="px-6 py-4 text-center">
+                                    {fine.isActive ? (
+                                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold border border-red-200 inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                                                Aktif
+                                            </span>
                                     ) : (
-                                        <span className="text-stone-400 text-xs">-</span>
+                                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold border border-green-200">
+                                                Pasif
+                                            </span>
                                     )}
                                 </td>
 
                                 <td className="px-6 py-4 text-right">
-                                    <button
-                                        onClick={() => handleRevokeBan(user.id, user.fullName)}
-                                        className="text-green-600 hover:text-green-800 font-medium text-xs border border-green-200 hover:bg-green-50 px-3 py-1 rounded transition-colors"
-                                    >
-                                        Cezayı Kaldır
-                                    </button>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => openDetailModal(fine)}
+                                            className="text-amber-700 hover:text-amber-900 font-medium text-xs bg-amber-50 px-3 py-1.5 rounded border border-amber-200 transition-colors"
+                                        >
+                                            Detay
+                                        </button>
+
+                                        {fine.isActive && (
+                                            <button
+                                                onClick={() => openRevokeModal(fine)}
+                                                className="text-stone-500 hover:text-red-600 font-medium text-xs bg-white border border-stone-300 hover:border-red-300 px-3 py-1.5 rounded transition-colors"
+                                            >
+                                                Kaldır
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
-                        );
-                    })}
-                    </tbody>
-                </table>
-            </div>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* --- MODALLAR --- */}
+
+            <FineDetailModal
+                isOpen={isDetailOpen}
+                onClose={() => setIsDetailOpen(false)}
+                fine={selectedFine}
+            />
+
+            <GenericConfirmModal
+                isOpen={isRevokeConfirmOpen}
+                onClose={() => setIsRevokeConfirmOpen(false)}
+                onConfirm={handleConfirmRevoke}
+                title="Cezayı Kaldır"
+                message={
+                    <span>
+                        Bu cezayı (ID: <strong>{selectedFine?.fineId}</strong>) kaldırmak istediğinize emin misiniz?
+                        <br/><span className="text-xs text-stone-500">Bu işlem geri alınamaz ve borç/yasak silinir.</span>
+                    </span>
+                }
+                confirmText="Evet, Kaldır"
+                isDanger={true}
+            />
+
         </div>
+    );
+}
+
+export default function BannedUsersPage() {
+    return (
+        <Suspense fallback={
+            <div className="w-full h-96 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-800"></div>
+                <span className="ml-3 text-stone-600 font-medium">Veriler Yükleniyor...</span>
+            </div>
+        }>
+            <BannedUsersContent />
+        </Suspense>
     );
 }

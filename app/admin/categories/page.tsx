@@ -71,6 +71,12 @@ export default function AdminCategoriesPage() {
     useEffect(() => {
         if (searchTerm.trim() === "") {
             fetchCategories();
+        }
+    }, [page]);
+
+    useEffect(() => {
+        if (searchTerm.trim() === "") {
+            fetchCategories();
             return;
         }
 
