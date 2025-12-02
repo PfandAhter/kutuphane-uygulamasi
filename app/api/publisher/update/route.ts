@@ -22,9 +22,13 @@ export async function PUT(request: NextRequest) {
         console.log("PUT /api/publisher/update called for ID:", id);
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (err: any) {
-        console.error("Proxy Publisher Update Error:", err?.message);
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Copy creation failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        console.error("Proxy PUT /api/publisher/update error:", err?.message);
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Publisher Update işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

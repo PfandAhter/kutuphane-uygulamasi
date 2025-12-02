@@ -11,7 +11,7 @@ export async function PUT(request: NextRequest) {
         const body = await request.json();
         console.log("Proxy PUT /api/book/update called for ID:", id);
 
-        await axios.put(`${API_BASE_URL}/api/Book/${id}`, body, {
+        await axios.put(`${API_BASE_URL}/api/Book/update-book/${id}`, body, {
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })
@@ -23,8 +23,12 @@ export async function PUT(request: NextRequest) {
     } catch (err: any) {
         console.error("Proxy Book Update Error:", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { error: "Copy creation failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Book Update işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

@@ -23,11 +23,13 @@ export async function POST(request: NextRequest) {
         console.log("Proxy POST /api/fine/revoke successful for ID:", id);
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (err: any) {
-        console.error("Proxy Revoke Error:", err?.message);
-
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "Revoke failed" };
-
-        return NextResponse.json(data, { status: status });
+        console.error("Proxy POST /api/fine/revoke error: ", err?.message);
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Fine Revoke işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

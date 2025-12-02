@@ -15,19 +15,24 @@ export async function GET(request: NextRequest) {
         if (!roomId) {
             return NextResponse.json({ error: "Room ID is required" }, { status: 400 });
         }
-
+        console.log("Proxy GET /api/shelf/list called");
         const response = await axios.get(`${API_BASE_URL}/api/Shelf/room/${roomId}`, {
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })
             }
         });
+        console.log("Proxy GET /api/shelf/list succeeded", response.data);
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
-        console.error("Proxy Shelf List Error:", err?.message);
+        console.error("Proxy GET /api/shelf/list error: ", err?.message);
 
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "Shelf fetch failed" };
-        return NextResponse.json(data, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Shelf List işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

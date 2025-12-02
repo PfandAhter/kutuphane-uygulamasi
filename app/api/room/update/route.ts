@@ -13,6 +13,7 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: "Room ID is required" }, { status: 400 });
         }
 
+        console.log("Proxy PUT /api/room/update called");
         const authHeader = request.headers.get("Authorization");
         const body = await request.json();
 
@@ -23,12 +24,17 @@ export async function PUT(request: NextRequest) {
             }
         });
 
+        console.log("Proxy PUT /api/room/update succeeded");
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (err: any) {
-        console.error("Proxy Room Update Error:", err?.message);
+        console.error("Proxy PUT /api/room/update error: ", err?.message);
 
-        const status = err.response?.status || 500;
-        const errorMessage = err.response?.data || { message: "Update failed" };
-        return NextResponse.json(errorMessage, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Room Update işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

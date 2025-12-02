@@ -11,13 +11,11 @@ export async function GET(request:NextRequest) {
         const config = {
             headers: {
                 "Content-Type": "application/json",
-                // Eğer header varsa ekle, yoksa boş geç (Spread operator)
                 ...(authHeader && { "Authorization": authHeader })
             }
         };
 
-        const response = await axios.get(`${API_BASE_URL}/api/Room`,config); // Room/list endpointi haline gelecek..
-
+        const response = await axios.get(`${API_BASE_URL}/api/Room`,config);
         console.log("Proxy GET /api/room/list succeeded");
         return new NextResponse(JSON.stringify(response.data), {
             status: response.status,
@@ -26,10 +24,14 @@ export async function GET(request:NextRequest) {
             },
         });
     } catch (err: any) {
-        console.error("Proxy GET /api/room/list hata:", err);
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "Proxy failed" };
+        console.error("Proxy GET /api/room/list error:", err);
 
-        return NextResponse.json(data, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Room List işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

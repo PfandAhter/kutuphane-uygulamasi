@@ -1,10 +1,18 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import { UserFilterDto, UserViewDto } from "@/src/types/user";
+import {UserFilterDto, UserViewDto} from "@/src/types/user";
 import {PaginatedResult} from "@/src/types/book";
+import {UserProfile} from "@/src/types/auth";
 
 const API_ROUTE_BASE = "/api/user";
 
 export const userService = {
+    getUserInfo: async (): Promise<UserProfile> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/info`, {
+            baseURL: ''
+        });
+        return response.data;
+    },
+
     getAllUsers: async (filter: UserFilterDto): Promise<PaginatedResult<UserViewDto>> => {
         const params = new URLSearchParams();
 

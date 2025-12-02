@@ -27,9 +27,12 @@ export async function GET(request: NextRequest) {
     } catch (err: any) {
         console.error("Proxy GET /api/user/list Error:", err?.message);
 
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "User list fetch failed" };
-
-        return NextResponse.json(data, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "User List işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

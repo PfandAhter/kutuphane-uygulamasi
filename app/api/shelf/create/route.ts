@@ -18,14 +18,17 @@ export async function POST(request: NextRequest) {
             }
         });
 
+        console.log("Proxy POST /api/shelf/add successful:", response.data);
         return NextResponse.json(response.data, { status: 201 });
-
     } catch (err: any) {
-        console.error("Proxy Shelf Add Error:", err?.message);
+        console.error("Proxy POST /api/shelf/add error: ", err?.message);
 
-        const status = err.response?.status || 500;
-        const data = err.response?.data || { error: "Shelf creation failed" };
-
-        return NextResponse.json(data, { status: status });
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Shelf Create işlemi başarısız." }, { status: err.response.status });
+        }
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }

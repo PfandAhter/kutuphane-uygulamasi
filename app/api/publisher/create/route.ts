@@ -19,8 +19,15 @@ export async function POST(request: NextRequest) {
         console.log("Proxy POST /api/publisher/create called");
         return NextResponse.json(response.data, { status: 201 });
     } catch (err: any) {
-        console.error("Proxy Publisher Add Error:", err?.message);
-        const status = err.response?.status || 500;
-        return NextResponse.json(err.response?.data || { error: "Failed" }, { status });
+        console.error("Proxy POST /api/publisher/create error: ", err?.message);
+
+        if (err.response){
+            return NextResponse.json(err.response.data || { error: "Publisher Create işlemi başarısız." }, { status: err.response.status });
+        }
+
+        return NextResponse.json(
+            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { status: 500 }
+        );
     }
 }
