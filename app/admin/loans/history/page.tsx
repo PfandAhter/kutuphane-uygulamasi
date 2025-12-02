@@ -49,7 +49,7 @@ export default function OverdueLoansPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold text-red-800 font-serif">Gecikmiş İadeler</h1>
+                    <h1 className="text-2xl font-bold text-red-800 font-serif">Geçmiş İadeler</h1>
                     <p className="text-red-500 text-sm">Teslim tarihi geçmiş ve henüz iade edilmemiş kitaplar.</p>
                 </div>
             </div>
