@@ -1,9 +1,10 @@
 'use client';
 
-import React, {createContext, useContext, useState} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import {AuthContextType} from "@/src/types/authContextType";
 import {AuthResponse, LoginDto, RegisterDto, UserProfile} from "@/src/types/auth";
 import {authService} from "@/src/services/authService";
+import {userService} from "@/src/services/userService";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -48,6 +49,30 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    useEffect(() => {
+        const initializeAuth = () => {
+            if (typeof window !== 'undefined') {
+                const storedToken = localStorage.getItem("token");
+                const storedRefreshToken = localStorage.getItem("refreshToken");
+                const storedUserProfile = localStorage.getItem("userProfile");
+
+                if (storedToken && storedUserProfile) {
+                    try {
+                        setToken(storedToken);
+                        setRefreshToken(storedRefreshToken);
+                        setUser(JSON.parse(storedUserProfile));
+                    } catch (error) {
+                        console.error("Error parsing auth data:", error);
+                        localStorage.clear();
+                    }
+                }
+            }
+            setIsLoading(false);
+        };
+
+        initializeAuth();
+    }, []);
+
     const login = async (dto: LoginDto) => {
         try {
             setIsLoading(true);
@@ -56,11 +81,13 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
 
             localStorage.setItem("token", response.token);
             localStorage.setItem("refreshToken", response.refreshToken);
-            localStorage.setItem("userProfile", JSON.stringify(response.user));
+
+            const userProfileDetails: UserProfile = await userService.getUserInfo();
+            localStorage.setItem("userProfile", JSON.stringify(userProfileDetails));
 
             setRefreshToken(response.refreshToken);
             setToken(response.token);
-            setUser(response.user);
+            setUser(userProfileDetails);
         } catch (error) {
             console.log("Login error:", error);
             throw error;

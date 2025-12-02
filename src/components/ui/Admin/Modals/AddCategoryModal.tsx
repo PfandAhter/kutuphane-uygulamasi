@@ -27,10 +27,10 @@ export default function AddCategoryModal({ isOpen, onClose, onSuccess }: Props) 
 
             toast.success("Kategori eklendi!", { id: toastId });
             setName('');
-            onSuccess(); // Ana sayfadaki kategori listesini yenile
+            onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Hata oluştu.", { id: toastId });
+        } catch (error: any) {
+            toast.error(error.message, { id: toastId });
         } finally {
             setLoading(false);
         }

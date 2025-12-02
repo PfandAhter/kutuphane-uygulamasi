@@ -31,4 +31,5 @@ export interface UserProfile{
     email: string;
     phoneNumber: string;
     dateOfBirth: string;
+    roles: string[];
 }
