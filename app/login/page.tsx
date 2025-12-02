@@ -28,8 +28,8 @@ export default function LoginPage() {
                 router.push('/');
             },1500);
         } catch (err: any) {
-            toast.error("Giriş işlemi başarısız. Lütfen bilgilerinizi kontrol edin.", {id: toastId});
-            setError(err.message || 'Giriş yapılırken bir hata oluştu.');
+            toast.error(err.message);
+            setError(err.message);
         } finally {
             setLoading(false);
         }

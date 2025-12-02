@@ -51,13 +51,17 @@ export default function RegisterPage() {
         try {
             await authService.register(formData);
 
-            toast.success("Kayıt işlemi başarılıdır. Giriş sayfasına yönlendiriliyorsunuz...", { id : toastId});
+            toast.success("Kayıt başarılı! Yönlendiriliyorsunuz...", { id : toastId});
             setTimeout(() =>{
                 router.push('/login');
             },1000);
         } catch (err: any) {
-            toast.error("Kayıt işlemi başarısız. Lütfen tekrar deneyin.", {id: toastId});
-            setError(err.message || 'Kayıt olurken bir hata oluştu.');
+            const msg = err.message || 'Kayıt sırasında beklenmedik bir hata oluştu.';
+            toast.error(msg, {
+                id: toastId,
+                duration: 5000
+            });
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -152,7 +156,6 @@ export default function RegisterPage() {
                                 required
                             />
 
-                            {/* --- PAROLA GEREKSİNİMLERİ GÖSTERGESİ --- */}
                             <div className="mt-2 text-xs space-y-1 bg-[#f6dcb7] p-2 rounded border border-[#c79f74]">
                                 <p className={`flex items-center text-black gap-1.5 transition-colors ${hasUpperCase ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
                                     <span className="text-[10px]">{hasUpperCase ? '✔' : '○'}</span> En az 1 büyük harf
@@ -162,6 +165,9 @@ export default function RegisterPage() {
                                 </p>
                                 <p className={`flex items-center text-black gap-1.5 transition-colors ${hasSpecialChar ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
                                     <span className="text-[10px]">{hasSpecialChar ? '✔' : '○'}</span> En az 1 özel karakter (!@#$...)
+                                </p>
+                                <p className={`flex items-center text-black gap-1.5 transition-colors ${formData.password.length >= 8 ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
+                                    <span className="text-[10px]">{formData.password.length >= 8 ? '✔' : '○'}</span> En az 8 karakter
                                 </p>
                             </div>
                         </div>

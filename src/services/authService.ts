@@ -32,7 +32,8 @@ export const authService = {
         console.log("Login response status:", response.status);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || "Giriş başarısız.");
+            const errorMessage = errorData.message || errorData.error || "Giriş başarısız.";
+            throw new Error(errorMessage);
         }
         return response.json();
     },
@@ -40,31 +41,26 @@ export const authService = {
     async register(dto: RegisterDto): Promise<void> {
         const response = await fetch(`${API_ROUTE_BASE}/register`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto),
         });
-        console.log("Register response status:", response.status);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || "Kayıt başarısız.");
-        }
-    }
-};
 
-export const getAuthHeaders = () => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            return {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            };
+            let errorMessage = "Kayıt işlemi başarısız.";
+
+            if (errorData.errors) {
+                const validationErrors = Object.values(errorData.errors).flat();
+                errorMessage = validationErrors.join(', ');
+            }
+            else if (errorData.message) {
+                errorMessage = errorData.message;
+            }
+            else if (errorData.error) {
+                errorMessage = errorData.error;
+            }
+            throw new Error(errorMessage);
         }
     }
-    return {
-        'Content-Type': 'application/json',
-    };
 };
