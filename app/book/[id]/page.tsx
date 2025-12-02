@@ -4,82 +4,96 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from "@/src/components/ui/Header";
 import { bookService } from "@/src/services/bookService";
-import {BookDetail} from "@/src/types/bookDetail";
+import { BookDetail } from "@/src/types/bookDetail";
+import { useAuth } from '@/src/hooks/useAuth';
+import toast from 'react-hot-toast';
+
+// Components
 import BookInfoCard from '@/src/components/ui/BookDetail/BookInfoCard';
 import BookMetadata from '@/src/components/ui/BookDetail/BookMetadata';
 import CopyStatusList from '@/src/components/ui/BookDetail/CopyStatusList';
 import BookReviews from '@/src/components/ui/BookDetail/BookReviews';
 import AuthorOtherBooks from "@/src/components/ui/BookDetail/AuthorOtherBooks";
-
-
-import { useAuth } from '@/src/hooks/useAuth';
 import BookDetailSkeleton from "@/src/components/ui/Skeletons/BookDetailSkeleton";
-
-// Helper to generate placeholder image based on title
-const getBookImage = (title: string) => {
-    return `https://placehold.co/300x450/e8e0d5/5d4037?text=${encodeURIComponent(title.substring(0, 20))}`;
-};
+import BorrowBookModal from '@/src/components/ui/Book/BorrowBookModal'
 
 export default function BookDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const {isAuthenticated} = useAuth();
+    const { isAuthenticated } = useAuth();
     const id = params?.id ? parseInt(params.id as string) : null;
 
     const [book, setBook] = useState<BookDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Modal States
+    const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+
+    // Varsayılan barkod (İlk uygun kopyanın barkodu)
+    const [defaultBarcode, setDefaultBarcode] = useState<string>('');
+
     const primaryAuthor = book?.bookAuthors && book.bookAuthors.length > 0
         ? book.bookAuthors[0].author
         : null;
 
-    const handleBorrowBook = async (copyId: number, barcode: string) => {
-        if (!isAuthenticated) {
-            alert("Kitap ödünç alabilmek için lütfen giriş yapınız.");
-            // router.push('/login') yapılabilir
-            return;
-        }
-
-        if (confirm(`${barcode} barkodlu kitabı ödünç almak istediğinize emin misiniz?`)) {
-            try {
-                // TODO: Backend servisine istek atılacak
-                // await loanService.createLoan({ copyId });
-                console.log("Ödünç alma isteği gönderildi:", copyId);
-                alert("Ödünç alma işlemi başarılı! Lütfen kütüphane görevlisinden kitabı teslim alınız.");
-
-                // Sayfayı veya listeyi yenilemek gerekebilir
-            } catch (error) {
-                console.error(error);
-                alert("İşlem sırasında bir hata oluştu.");
-            }
+    // Veri Çekme
+    const fetchBook = async () => {
+        if (!id) return;
+        try {
+            const data = await bookService.getBookDetails(id);
+            setBook(data);
+        } catch (err) {
+            console.error(err);
+            setError("Kitap detayları yüklenirken bir hata oluştu.");
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (!id) return;
-
-        const fetchBook = async () => {
-            try {
-                setLoading(true);
-                // Burada id tip uyumuna dikkat
-                const data = await bookService.getBookDetails(id);
-                setBook(data);
-            } catch (err) {
-                console.error(err);
-                setError("Kitap detayları yüklenirken bir hata oluştu.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        setLoading(true);
         fetchBook();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
+    // --- HANDLERS ---
+
+    const handleBorrowClick = () => {
+        if (!isAuthenticated) {
+            toast.error("Kitap ödünç alabilmek için lütfen giriş yapınız.");
+            return;
+        }
+
+        if (book) {
+            // Müsait olan İLK kopyayı bul
+            const availableCopy = book.bookCopies.find(c => c.isAvailable);
+
+            if (availableCopy) {
+                setDefaultBarcode(availableCopy.barcodeNumber || '');
+            } else {
+                setDefaultBarcode(''); // Hiçbiri müsait değilse boş bırak (Kullanıcı manuel girebilir)
+            }
+        }
+
+        setIsBorrowModalOpen(true);
+    };
+
+    const handleBorrowSuccess = () => {
+        fetchBook(); // Stok durumunu güncelle
+    };
+
+    const handleCloseModal = () => {
+        setIsBorrowModalOpen(false);
+        setDefaultBarcode('');
+    };
+
+    // --- RENDER ---
 
     if (loading) {
         return (
             <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
                 <Header />
-                {/* Eski loading yerine Skeleton Component'i */}
                 <BookDetailSkeleton />
             </div>
         );
@@ -107,7 +121,6 @@ export default function BookDetailPage() {
             <Header />
 
             <main className="container mx-auto px-4 py-8">
-                {/* Geri Dön Butonu / Breadcrumb */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.back()}
@@ -118,21 +131,19 @@ export default function BookDetailPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Sol Geniş Kolon: Kitap Bilgisi ve Kopyalar */}
                     <div className="lg:col-span-2">
-                        <BookInfoCard book={book} />
-
-                        {/* CopyStatusList güncellendi, prop gönderiyoruz */}
-                        <CopyStatusList
+                        {/* Kitap Bilgi Kartı (Buton Burada) */}
+                        <BookInfoCard
                             book={book}
-                            onBorrowClick={handleBorrowBook}
+                            onBorrowClick={handleBorrowClick}
                         />
 
-                        {/* Yorumlar Bölümü Eklendi */}
+                        {/* Kopya Durum Listesi (Butonsuz) */}
+                        <CopyStatusList book={book} />
+
                         <BookReviews bookId={book.id} />
                     </div>
 
-                    {/* Sağ Dar Kolon: Metadata ve Ekstra Bilgiler */}
                     <div className="lg:col-span-1">
                         <BookMetadata book={book} />
 
@@ -147,6 +158,15 @@ export default function BookDetailPage() {
                     </div>
                 </div>
             </main>
+
+            {/* --- MODAL --- */}
+            <BorrowBookModal
+                isOpen={isBorrowModalOpen}
+                onClose={handleCloseModal}
+                barcode={defaultBarcode} // Otomatik bulunan barkodu gönder
+                bookTitle={book.title}
+                onSuccess={handleBorrowSuccess}
+            />
         </div>
     );
 }

@@ -1,3 +1,8 @@
+export interface CreateLoanDto {
+    barcodeNumber: string;
+    loanDays: number;
+}
+
 export interface LoanInfo{
     loanDate: string;
     expectedReturnDate: string;
