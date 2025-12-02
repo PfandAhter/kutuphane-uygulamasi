@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
 
         console.log("Proxy POST /api/publisher/create called");
-        const response = await axios.post(`${API_BASE_URL}/api/Publisher`, body, {
+        const response = await axios.post(`${API_BASE_URL}/api/Publishers`, body, {
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })
