@@ -1,15 +1,16 @@
 'use client';
 
 import React from 'react';
-import { BookDetail, BookCopy } from '@/src/types/bookDetail';
+import { BookDetail } from '@/src/types/bookDetail';
 
 interface Props {
     book: BookDetail;
-    onBorrowClick: (copyId: number, barcode: string) => void; // Parent'tan fonksiyon alıyoruz
 }
 
-const CopyStatusList = ({ book, onBorrowClick }: Props) => {
-    const availableCount = book.bookCopies.filter(c => c.isAvailable).length;
+const CopyStatusList = ({ book }: Props) => {
+    // Toplam stok ve müsait stok hesaplama
+    const totalCopies = book.bookCopies.length;
+    const availableCopies = book.bookCopies.filter(c => c.isAvailable).length;
 
     return (
         <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm mt-6">
@@ -17,9 +18,14 @@ const CopyStatusList = ({ book, onBorrowClick }: Props) => {
                 <h3 className="font-serif font-bold text-xl text-amber-950">
                     Konum ve Durum Bilgisi
                 </h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${availableCount > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                    {availableCount > 0 ? `${availableCount} Adet Mevcut` : 'Tükendi / Ödünçte'}
-                </span>
+                <div className="flex gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold border bg-stone-50 border-stone-200 text-stone-600">
+                        Toplam: {totalCopies}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${availableCopies > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                        {availableCopies > 0 ? `${availableCopies} Adet Mevcut` : 'Tükendi'}
+                    </span>
+                </div>
             </div>
 
             {book.bookCopies.length === 0 ? (
@@ -29,44 +35,37 @@ const CopyStatusList = ({ book, onBorrowClick }: Props) => {
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-stone-500 uppercase bg-stone-50 border-b border-stone-200">
                         <tr>
-                            <th className="px-4 py-3">Barkod</th>
-                            <th className="px-4 py-3">Oda / Raf</th>
-                            <th className="px-4 py-3">Durum</th>
-                            <th className="px-4 py-3 text-right">İşlem</th>
+                            <th className="px-4 py-3">Oda / Salon</th>
+                            <th className="px-4 py-3">Raf Kodu</th>
+                            <th className="px-4 py-3 text-right">Durum</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100">
                         {book.bookCopies.map((copy) => (
                             <tr key={copy.id} className="hover:bg-amber-50/30 transition-colors">
-                                <td className="px-4 py-3 font-mono text-stone-600">{copy.barcodeNumber}</td>
-
-                                <td className="px-4 py-3 text-stone-700">
-                                    <div className="font-medium">{copy.shelf?.room?.roomCode}</div>
-                                    <div className="text-xs text-stone-400">{copy.shelf?.shelfCode}</div>
+                                {/* Oda Bilgisi */}
+                                <td className="px-4 py-3 font-medium text-amber-900">
+                                    {copy.shelf?.room?.roomCode}
+                                    <span className="text-stone-400 font-normal ml-1 hidden sm:inline">
+                                        ({copy.shelf?.room?.description})
+                                    </span>
                                 </td>
 
-                                <td className="px-4 py-3">
-                                    {copy.isAvailable ? (
-                                        <span className="inline-flex items-center gap-1 text-green-700 font-bold text-xs bg-green-50 px-2 py-1 rounded">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Rafta
-                                            </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1 text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Ödünçte
-                                            </span>
-                                    )}
+                                {/* Raf Bilgisi */}
+                                <td className="px-4 py-3 font-bold text-stone-800">
+                                    {copy.shelf?.shelfCode}
                                 </td>
 
+                                {/* Durum */}
                                 <td className="px-4 py-3 text-right">
                                     {copy.isAvailable ? (
-                                        <button
-                                            onClick={() => onBorrowClick(copy.id, copy.barcodeNumber)}
-                                            className="bg-amber-700 hover:bg-amber-800 text-amber-50 text-xs font-serif py-1.5 px-4 rounded shadow-sm transition-all active:scale-95"
-                                        >
-                                            Ödünç Al
-                                        </button>
+                                        <span className="inline-flex items-center gap-1 text-green-700 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-100">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Rafta
+                                        </span>
                                     ) : (
-                                        <span className="text-stone-300 text-xs select-none">İşlem Yok</span>
+                                        <span className="inline-flex items-center gap-1 text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-100">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Ödünçte
+                                        </span>
                                     )}
                                 </td>
                             </tr>

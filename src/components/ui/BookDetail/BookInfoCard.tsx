@@ -1,50 +1,126 @@
-import React from 'react';
-import {BookDetail} from "@/src/types/bookDetail";
+'use client';
+
+import React, { useState } from 'react';
+import { BookDetail } from "@/src/types/bookDetail";
 
 interface Props {
     book: BookDetail;
+    onBorrowClick: () => void;
 }
 
+const BookInfoCard = ({ book, onBorrowClick }: Props) => {
+    const [isExpanded, setIsExpanded] = useState(false);
 
-const BookInfoCard = ({ book }: Props) => {
     // Yazarları string olarak birleştirelim
     const authorNames = book.bookAuthors?.map(ba => `${ba.author.firstName} ${ba.author.lastName}`).join(", ") || "Yazar Bilgisi Yok";
+    const hasAvailableCopy = book.bookCopies.some(c => c.isAvailable);
+    const description = book.description || "Bu kitap için henüz bir özet girilmemiştir. Kitap detayları aşağıda yer almaktadır.";
 
     return (
-        <div className="bg-white border border-amber-200 rounded-lg shadow-sm p-6 flex flex-col md:flex-row gap-8">
-            {/* Sol Taraf: Kapak Resmi (Placeholder) */}
-            <div className="w-full md:w-48 shrink-0">
-                <div className="aspect-[2/3] w-full bg-stone-200 rounded-md border border-stone-300 flex items-center justify-center text-stone-400 overflow-hidden">
-                    {/* Temporary random image */}
+        <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row">
+
+            {/* SOL TARAF: Kapak Resmi ve Görsel Alan */}
+            <div className="md:w-64 bg-stone-100 flex flex-col items-center justify-center p-6 border-b md:border-b-0 md:border-r border-stone-200 shrink-0">
+                <div className="relative w-40 md:w-48 aspect-[2/3] shadow-lg rounded-md overflow-hidden group">
                     <img
-                        src={`https://picsum.photos/300/450?random=${encodeURIComponent(book.title)}`}
+                        src={`https://picsum.photos/300/450?random=${book.id}`}
                         alt={book.title || "Book cover"}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                    {/* Resim Yoksa Gösterilecek Fallback (Opsiyonel) */}
+                    {!book.title && (
+                        <div className="absolute inset-0 bg-stone-300 flex items-center justify-center text-stone-500 font-serif text-4xl">
+                            ?
+                        </div>
+                    )}
+                </div>
+
+                {/* Kategori Etiketi (Resmin Altında) */}
+                <div className="mt-4">
+                    <span className="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wide border border-amber-200">
+                        {book.category?.name || "Genel"}
+                    </span>
                 </div>
             </div>
 
-            {/* Sağ Taraf: Başlık ve Özet */}
-            <div className="flex-1">
-                <div className="mb-4">
-                    <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-bold uppercase tracking-wide">
-                        {book.category?.name || "Kategori Yok"}
-                    </span>
+            {/* SAĞ TARAF: İçerik ve Aksiyon */}
+            <div className="flex-1 flex flex-col p-6 md:p-8">
+
+                {/* Üst Bilgi: Başlık ve Yazar */}
+                <div className="mb-6">
+                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-amber-950 mb-2 leading-tight">
+                        {book.title}
+                    </h1>
+                    <div className="flex items-center gap-2 text-lg text-stone-600 font-medium">
+                        <span className="text-amber-700">✍️</span>
+                        <span>{authorNames}</span>
+                    </div>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-serif font-bold text-amber-950 mb-2">
-                    {book.title}
-                </h1>
+                {/* Orta Kısım: Özet (Expandable) */}
+                <div className="flex-1 mb-6">
+                    <h3 className="font-serif font-bold text-lg text-stone-800 mb-2 flex items-center gap-2">
+                        📖 Kitap Özeti
+                    </h3>
+                    <div className="relative">
+                        <p className={`text-stone-600 leading-relaxed text-sm md:text-base transition-all duration-300 ${!isExpanded ? 'line-clamp-4 md:line-clamp-6' : ''}`}>
+                            {description}
+                        </p>
 
-                <p className="text-lg text-stone-600 font-medium mb-6">
-                    {authorNames}
-                </p>
+                        {/* Metin uzunsa 'Devamını Oku' butonu göster */}
+                        {description.length > 250 && (
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="text-amber-700 hover:text-amber-900 text-sm font-semibold mt-1 focus:outline-none hover:underline"
+                            >
+                                {isExpanded ? 'Daha Az Göster' : 'Devamını Oku...'}
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                <div className="prose prose-stone max-w-none text-stone-700 leading-relaxed">
-                    <h3 className="font-serif font-bold text-lg text-amber-900 mb-2 border-b border-amber-100 pb-1">Özet</h3>
-                    <p>
-                        {book.description || "Bu kitap için henüz bir özet girilmemiştir. Kitap detayları aşağıda yer almaktadır."}
-                    </p>
+                {/* Alt Kısım: Detaylar ve Buton */}
+                <div className="mt-auto pt-6 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+                    {/* Metadata */}
+                    <div className="flex items-center gap-6 text-sm text-stone-500 w-full sm:w-auto justify-center sm:justify-start">
+                        <div className="flex flex-col items-center sm:items-start">
+                            <span className="text-xs uppercase font-bold text-stone-400">Sayfa</span>
+                            <span className="font-bold text-stone-800 text-lg">{book.pageCount}</span>
+                        </div>
+                        <div className="w-px h-8 bg-stone-200"></div>
+                        <div className="flex flex-col items-center sm:items-start">
+                            <span className="text-xs uppercase font-bold text-stone-400">Yıl</span>
+                            <span className="font-bold text-stone-800 text-lg">{book.publicationYear}</span>
+                        </div>
+                        <div className="w-px h-8 bg-stone-200"></div>
+                        <div className="flex flex-col items-center sm:items-start">
+                            <span className="text-xs uppercase font-bold text-stone-400">Yayınevi</span>
+                            <span className="font-bold text-stone-800 text-lg truncate max-w-[120px]" title={book.publisher.name}>
+                                {book.publisher.name}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Aksiyon Butonu */}
+                    <button
+                        onClick={onBorrowClick}
+                        disabled={!hasAvailableCopy}
+                        className={`w-full sm:w-auto px-8 py-3 rounded-lg font-bold shadow-md transition-all transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap
+                            ${hasAvailableCopy
+                            ? 'bg-amber-900 hover:bg-amber-800 text-white cursor-pointer hover:shadow-lg'
+                            : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'}`}
+                    >
+                        {hasAvailableCopy ? (
+                            <>
+                                <span>📚</span> Ödünç Al
+                            </>
+                        ) : (
+                            <>
+                                <span>🚫</span> Tükendi
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>

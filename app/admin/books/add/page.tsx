@@ -16,7 +16,7 @@ import { Category } from "@/src/types/category";
 
 import AddPublisherModal from "@/src/components/ui/Admin/Modals/AddPublisherModal";
 import AddAuthorModal from "@/src/components/ui/Admin/Modals/AddAuthorModal";
-import {CreateBookDto, CreateCopyBookDto} from "@/src/types/book";
+import { CreateBookDto, CreateCopyBookDto } from "@/src/types/book";
 import AddCategoryModal from "@/src/components/ui/Admin/Modals/AddCategoryModal";
 
 interface CreateBookFormState {
@@ -72,27 +72,26 @@ export default function AddBookPage() {
         try {
             const data = await authorService.getAllAuthors();
             if (Array.isArray(data)) setAuthors(data);
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
     };
 
     const fetchPublishers = async () => {
         try {
             const data = await publisherService.getAllPublishers();
             if (Array.isArray(data)) setPublishers(data);
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
     };
 
     const fetchCategories = async () => {
         try {
             const data = await categoryService.getCategories();
             if (Array.isArray(data)) setCategories(data);
-        }catch (e) { console.error(e); }
+        } catch (e) { console.error(e); }
     }
 
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // Promise.all ile hepsini aynı anda başlatıyoruz, birbirini beklemezler
                 const [roomsData, authorsData, publishersData, categoriesData] = await Promise.all([
                     roomService.getRooms(),
                     authorService.getAllAuthors(),
@@ -177,6 +176,8 @@ export default function AddBookPage() {
     // --- HANDLERS ---
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        // 1. Checkbox Kontrolü
         if (name === 'addCopy') {
             const checked = (e.target as HTMLInputElement).checked;
             setForm(prev => ({ ...prev, [name]: checked }));
@@ -192,8 +193,18 @@ export default function AddBookPage() {
             return;
         }
 
+        // 2. SADECE SAYI GİRİŞİ KONTROLÜ (ISBN ve Barkod için)
+        if (name === 'isbn' || name === 'barcodeNumber') {
+            // Eğer değer boş değilse ve içinde sayı harici karakter varsa işlemi durdur
+            if (value !== '' && !/^\d+$/.test(value)) {
+                return;
+            }
+        }
+
+        // 3. Hata mesajını temizle
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
 
+        // 4. State Güncelleme
         if (name === 'roomId') {
             setForm(prev => ({ ...prev, [name]: value, shelfId: '' }));
         } else {
@@ -226,8 +237,6 @@ export default function AddBookPage() {
             };
             const response = await bookService.createBook(dto);
 
-            console.log("Gönderilen DTO:", dto);
-
             if (form.addCopy && response?.id) {
                 const copyDto: CreateCopyBookDto = {
                     bookId: response.id,
@@ -237,7 +246,7 @@ export default function AddBookPage() {
                 };
 
                 const bookCopyResponse = await bookCopyService.createCopy(copyDto);
-                if(!bookCopyResponse?.id){
+                if (!bookCopyResponse?.id) {
                     throw new Error("Kopya eklenemedi.");
                 }
                 toast.success("Kitap ve kopya başarıyla eklendi!", { id: toastId });
@@ -254,7 +263,6 @@ export default function AddBookPage() {
         }
     };
 
-    // Helper: Input Class (Hata varsa kırmızı border)
     const getInputClass = (fieldName: string) => `
         w-full border rounded-md p-2.5 outline-none transition-all text-black
         ${errors[fieldName]
@@ -277,7 +285,6 @@ export default function AddBookPage() {
 
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm p-8 relative">
 
-                {/* Yükleniyor Overlay (Sadece ilk açılışta) */}
                 {loadingInitial && (
                     <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
                         <span className="text-amber-800 font-medium">Veriler yükleniyor...</span>
@@ -286,9 +293,7 @@ export default function AddBookPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Temel Bilgiler Bölümü */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Kitap Adı */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Kitap Adı <span className="text-red-500">*</span></label>
                             <input
@@ -299,18 +304,22 @@ export default function AddBookPage() {
                             {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
                         </div>
 
-                        {/* ISBN */}
+                        {/* ISBN Input */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">ISBN <span className="text-red-500">*</span></label>
                             <input
-                                name="isbn" type="text"
-                                value={form.isbn} onChange={handleChange}
-                                className={getInputClass('isbn')} placeholder="978-..."
+                                name="isbn"
+                                type="text"
+                                inputMode="numeric" // Mobilde sayı klavyesi açar
+                                value={form.isbn}
+                                onChange={handleChange}
+                                className={getInputClass('isbn')}
+                                placeholder="Sadece rakam giriniz (Örn: 9781234567890)"
+                                maxLength={13} // İsteğe bağlı limit
                             />
                             {errors.isbn && <p className="text-red-500 text-xs mt-1">{errors.isbn}</p>}
                         </div>
 
-                        {/* Yazar Seçimi (Dinamik) */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yazar <span className="text-red-500">*</span></label>
                             <select
@@ -333,7 +342,6 @@ export default function AddBookPage() {
                             </div>
                         </div>
 
-                        {/* Yayınevi Seçimi (Dinamik) */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yayınevi <span className="text-red-500">*</span></label>
                             <select
@@ -371,19 +379,17 @@ export default function AddBookPage() {
                             </div>
                         </div>
 
-                        {/* Yayın Yılı */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yayın Yılı</label>
                             <input
                                 name="publicationYear" type="number"
                                 value={form.publicationYear} onChange={handleChange}
-                                min="0" // HTML Validasyonu
+                                min="0"
                                 className={getInputClass('publicationYear')} placeholder="2024"
                             />
                             {errors.publicationYear && <p className="text-red-500 text-xs mt-1">{errors.publicationYear}</p>}
                         </div>
 
-                        {/* Sayfa Sayısı */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Sayfa Sayısı</label>
                             <input
@@ -395,7 +401,6 @@ export default function AddBookPage() {
                             {errors.pageCount && <p className="text-red-500 text-xs mt-1">{errors.pageCount}</p>}
                         </div>
 
-                        {/* Dil */}
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Dil</label>
                             <select
@@ -410,7 +415,6 @@ export default function AddBookPage() {
                         </div>
                     </div>
 
-                    {/* --- KONUM BİLGİSİ --- */}
                     <div className={`border rounded-md transition-colors duration-200 ${form.addCopy ? 'border-amber-200 bg-amber-50/30' : 'border-stone-200 bg-stone-50'}`}>
 
                         <div className="p-4 border-b border-stone-200 flex items-center justify-between">
@@ -431,12 +435,17 @@ export default function AddBookPage() {
 
                         {form.addCopy && (
                             <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2">
+                                {/* Barkod Input */}
                                 <div>
                                     <label className="block text-xs font-bold text-stone-600 mb-1">Barkod No <span className="text-red-500">*</span></label>
                                     <input
-                                        name="barcodeNumber" type="text"
-                                        value={form.barcodeNumber} onChange={handleChange}
-                                        className={getInputClass('barcodeNumber')} placeholder="Barkod giriniz"
+                                        name="barcodeNumber"
+                                        type="text"
+                                        inputMode="numeric" // Mobilde sayı klavyesi
+                                        value={form.barcodeNumber}
+                                        onChange={handleChange}
+                                        className={getInputClass('barcodeNumber')}
+                                        placeholder="Sadece rakam giriniz"
                                     />
                                     {errors.barcodeNumber && <p className="text-red-500 text-xs mt-1">{errors.barcodeNumber}</p>}
                                 </div>
