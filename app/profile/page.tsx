@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Header from "@/src/components/ui/Header";
 import { useAuth } from "@/src/hooks/useAuth";
 import { userService } from '@/src/services/userService';
-import {UserStats, MyFineDto, UserFineDto} from '@/src/types/user';
+import { UserStats, MyFineDto, UserFineDto } from '@/src/types/user';
 import toast from 'react-hot-toast';
 
 // Bileşenler
@@ -12,9 +12,6 @@ import ProfileSidebar from '@/src/components/ui/Profile/ProfileSidebar';
 import ActiveLoans from '@/src/components/ui/Profile/ActiveLoans';
 import PastLoans from '@/src/components/ui/Profile/PastLoans';
 import PaginationControls from '@/src/components/ui/Admin/Common/PaginationControls';
-// FineListTable ve ActiveFines içerisindeki logic'i buraya taşıdığımız için
-// ActiveFines ve PastFines componentleri yerine direkt tabloyu veya onları "dumb component" olarak kullanacağız.
-// Şimdilik senin yapına sadık kalarak ActiveFines içindeki logic'i buraya aldım.
 import FineListTable from '@/src/components/ui/Profile/FineListTable';
 import PaymentModal from '@/src/components/ui/Profile/PaymentModal';
 import { fineService } from "@/src/services/fineService";
@@ -26,7 +23,8 @@ const TABS = {
     PAST_FINES: 'past_fines'
 };
 
-export default function ProfilePage() {
+// --- İÇERİK BİLEŞENİ (ASIL SAYFA MANTIĞI BURADA) ---
+function ProfileContent() {
     const { user } = useAuth();
 
     const [activeTab, setActiveTab] = useState(TABS.ACTIVE_LOANS);
@@ -39,7 +37,7 @@ export default function ProfilePage() {
     const [fines, setFines] = useState<UserFineDto[]>([]);
     const [finesLoading, setFinesLoading] = useState(false);
 
-    // Payment Modal State (Sadece ctive Fines için gerekli)
+    // Payment Modal State
     const [selectedFine, setSelectedFine] = useState<UserFineDto | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
@@ -48,15 +46,14 @@ export default function ProfilePage() {
     useEffect(() => {
         setPage(1);
         setTotalCount(0);
-        setFines([]); // Önceki datayı temizle
+        setFines([]);
     }, [activeTab]);
 
-    // Veri Çekme Tetikleyicisi (Tab veya Sayfa değişince)
+    // Veri Çekme Tetikleyicisi
     useEffect(() => {
         if (activeTab === TABS.ACTIVE_FINES || activeTab === TABS.PAST_FINES) {
             fetchFinesData();
         }
-        // Loans bileşenleri kendi içinde useEffect ile page dinliyor, buraya eklemeye gerek yok.
     }, [activeTab, page]);
 
     // İstatistikleri Çek
@@ -74,23 +71,38 @@ export default function ProfilePage() {
     const fetchFinesData = async () => {
         setFinesLoading(true);
         try {
-            const result = await fineService.getMyActiveFines(page, pageSize);
+            // Aktif veya Geçmiş Cezalar İçin Servis Seçimi
+            // Eğer ikisi farklı endpoint ise if-else ile ayırabilirsin
+            // Tek endpoint ise parametre göndererek ayrıştırabilirsin (örn: isPaid)
 
-            if (result && result.items) {
-                setFines(result.items);
-                setTotalCount(result.totalCount || 0);
-            } else {
-                setFines([]);
+            // Örnek: Aktif Cezalar
+            if (activeTab === TABS.ACTIVE_FINES) {
+                const result = await fineService.getMyActiveFines(page, pageSize);
+                if (result && result.items) {
+                    setFines(result.items);
+                    setTotalCount(result.totalCount || 0);
+                } else {
+                    setFines([]);
+                    setTotalCount(0);
+                }
+            }
+            // Örnek: Geçmiş Cezalar (Serviste getMyPastFines gibi bir metodun varsa)
+            else if (activeTab === TABS.PAST_FINES) {
+                // Şimdilik aynı servisi çağırıyorum, burayı kendi metoduna göre güncelle
+                // const result = await fineService.getMyPastFines(page, pageSize);
+                setFines([]); // Geçici boş
                 setTotalCount(0);
             }
+
         } catch (error) {
             console.error("Cezalar yüklenemedi", error);
+            toast.error("Cezalar yüklenemedi.");
         } finally {
             setFinesLoading(false);
         }
     };
 
-    // --- ÖDEME İŞLEMLERİ (Active Fines Logic) ---
+    // --- ÖDEME İŞLEMLERİ ---
     const handlePayClick = (fine: UserFineDto) => {
         setSelectedFine(fine);
         setIsPaymentModalOpen(true);
@@ -148,7 +160,7 @@ export default function ProfilePage() {
                                     <PastLoans page={page} pageSize={pageSize} onDataLoaded={setTotalCount} />
                                 )}
 
-                                {/* Cezalar Kısmı (Artık State Burada Yönetiliyor) */}
+                                {/* Cezalar Kısmı */}
                                 {(activeTab === TABS.ACTIVE_FINES || activeTab === TABS.PAST_FINES) && (
                                     <FineListTable
                                         fines={fines}
@@ -159,7 +171,7 @@ export default function ProfilePage() {
                                 )}
                             </div>
 
-                            {/* Pagination (Tüm sekmeler için ortak ve sabit) */}
+                            {/* Pagination */}
                             {totalCount > 0 && (
                                 <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-xl mt-auto shrink-0">
                                     <PaginationControls
@@ -176,7 +188,6 @@ export default function ProfilePage() {
                 </div>
             </main>
 
-            {/* Ödeme Modalı (Sadece Aktif Cezalar için) */}
             <PaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}
@@ -185,5 +196,21 @@ export default function ProfilePage() {
                 loading={paymentLoading}
             />
         </div>
+    );
+}
+
+// --- ANA SAYFA COMPONENTİ (SUSPENSE WRAPPER) ---
+export default function ProfilePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#F5F5F4] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-800 rounded-full animate-spin"></div>
+                    <span className="text-amber-900 font-serif font-medium animate-pulse">Profil Yükleniyor...</span>
+                </div>
+            </div>
+        }>
+            <ProfileContent />
+        </Suspense>
     );
 }
