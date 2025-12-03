@@ -17,10 +17,12 @@ export interface BookCopy {
     shelf: Shelf;
 }
 
-export interface UpdateBookCopyDto{
+export interface UpdateBookCopyDto {
     id: number;
-    shelfId: number;
-    //isAvailable: boolean;
+    barcodeNumber?: string;
+    roomId?: number;
+    shelfCode?: string;
+    isAvailable?: boolean;
 }
 
 export interface BookDetail {

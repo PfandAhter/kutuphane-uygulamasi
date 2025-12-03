@@ -13,7 +13,7 @@ interface ManageCopiesProps {
     isOpen: boolean;
     onClose: () => void;
     book: Book | null;
-    onUpdate: () => void; // Ana sayfayı yenilemek istersek
+    onUpdate: () => void;
 }
 
 export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate }: ManageCopiesProps) {
@@ -21,7 +21,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     const [copies, setCopies] = useState<BookCopy[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [availableShelves, setAvailableShelves] = useState<Shelf[]>([]); // Düzenleme anındaki raflar
+    const [availableShelves, setAvailableShelves] = useState<Shelf[]>([]);
 
     const [loading, setLoading] = useState(false);
 
@@ -31,11 +31,8 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
 
     // Editing State
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editForm, setEditForm] = useState({ roomId: 0, shelfId: 0 });
+    const [editForm, setEditForm] = useState({ roomId: 0, shelfCode: '' });
 
-    // --- FETCH DATA ---
-
-    // 1. Modal açılınca Odaları ve İlk Sayfayı Çek
     useEffect(() => {
         if (isOpen && book) {
             setPage(1);
@@ -43,14 +40,12 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
         }
     }, [isOpen, book]);
 
-    // 2. Sayfa değişince sadece Kopyaları Çek
     useEffect(() => {
         if (isOpen && book) {
             fetchCopies(page);
         }
     }, [page]);
 
-    // 3. Düzenlerken Oda seçilirse o odanın raflarını getir
     useEffect(() => {
         if (editingId && editForm.roomId > 0) {
             fetchShelvesForEdit(editForm.roomId);
@@ -100,31 +95,35 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
 
     const handleEditClick = (copy: BookCopy) => {
         setEditingId(copy.id);
-        // Mevcut değerleri forma ata
-        /*setEditForm({
+        setEditForm({
             roomId: copy.shelf?.roomId || 0,
-            shelfId: copy.shelf.shelfCode
-        });*/
-        // Mevcut odanın raflarını yükle ki select boş kalmasın
+            shelfCode: copy.shelf?.shelfCode || ''
+        });
         if(copy.shelf?.roomId) fetchShelvesForEdit(copy.shelf.roomId);
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
-        setEditForm({ roomId: 0, shelfId: 0 });
+        setEditForm({ roomId: 0, shelfCode: '' });
     };
 
     const handleSave = async (copyId: number) => {
+        if (editForm.roomId === 0 || !editForm.shelfCode) {
+            return toast.error("Lütfen oda ve raf seçiniz.");
+        }
+
         try {
             await bookCopyService.updateCopy({
                 id: copyId,
-                shelfId: editForm.shelfId,
-                //isAvailable: true // Veya mevcut durumu koru
+                roomId: editForm.roomId,
+                shelfCode: editForm.shelfCode,
+                isAvailable: true
             });
+
             toast.success("Kopya güncellendi.");
             setEditingId(null);
-            fetchCopies(page); // Listeyi tazele
-            onUpdate(); // Ana sayfaya haber ver
+            fetchCopies(page);
+            onUpdate();
         } catch (error) {
             toast.error("Güncelleme başarısız.");
         }
@@ -199,7 +198,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                             <select
                                                 className="border border-amber-300 rounded p-1 text-xs text-black w-full outline-none focus:ring-1 focus:ring-amber-500"
                                                 value={editForm.roomId}
-                                                onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value), shelfId: 0 })}
+                                                onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value), shelfCode: '' })}
                                             >
                                                 <option value={0}>Seçiniz</option>
                                                 {rooms.map(r => (
@@ -220,13 +219,14 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                         {isEditing ? (
                                             <select
                                                 className="border border-amber-300 rounded p-1 text-xs text-black w-24 outline-none focus:ring-1 focus:ring-amber-500"
-                                                value={editForm.shelfId}
-                                                onChange={(e) => setEditForm({ ...editForm, shelfId: Number(e.target.value) })}
+                                                value={editForm.shelfCode} // Value artık shelfCode (string)
+                                                onChange={(e) => setEditForm({ ...editForm, shelfCode: e.target.value })}
                                                 disabled={editForm.roomId === 0}
                                             >
-                                                <option value={0}>Raf Seç</option>
+                                                <option value="">Raf Seç</option>
                                                 {availableShelves.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.shelfCode}</option>
+                                                    // Value olarak shelfCode veriyoruz
+                                                    <option key={s.id} value={s.shelfCode}>{s.shelfCode}</option>
                                                 ))}
                                             </select>
                                         ) : (

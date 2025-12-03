@@ -14,6 +14,12 @@ export interface CreateAuthorDto {
     lastName: string;
 }
 
+export interface UpdateAuthorDto {
+    id: number;
+    firstName: string;
+    lastName: string;
+}
+
 export interface CreatePublisherDto {
     name: string;
 }
