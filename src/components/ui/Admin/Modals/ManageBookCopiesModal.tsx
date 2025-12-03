@@ -28,7 +28,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     const pageSize = 5;
 
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editForm, setEditForm] = useState({ roomId: 0, shelfCode: '' });
+    const [editForm, setEditForm] = useState({ roomId: 0, shelfCode: '', barcodeNumber: '' });
 
     useEffect(() => {
         if (isOpen && book) {
@@ -96,20 +96,21 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
         setEditingId(copy.id);
         setEditForm({
             roomId: copy.shelf?.roomId || 0,
-            shelfCode: copy.shelf?.shelfCode || ''
+            shelfCode: copy.shelf?.shelfCode || '',
+            barcodeNumber: copy.barcodeNumber || ''
         });
         if(copy.shelf?.roomId) fetchShelvesForEdit(copy.shelf.roomId);
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
-        setEditForm({ roomId: 0, shelfCode: '' });
+        setEditForm({ roomId: 0, shelfCode: '' ,barcodeNumber: ''});
     };
 
     const handleSave = async (copyId: number) => {
         const toastId = toast.loading("Kopya güncelleniyor...");
-        if (editForm.roomId === 0 || !editForm.shelfCode) {
-            return toast.error("Lütfen oda ve raf seçiniz.", { id: toastId });
+        if (editForm.roomId === 0 || !editForm.shelfCode || !editForm.barcodeNumber) {
+            return toast.error("Lütfen oda ve raf veya barkod numarasini duzgun seçiniz.", { id: toastId });
         }
 
         try {
@@ -117,6 +118,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                 id: copyId,
                 roomId: editForm.roomId,
                 shelfCode: editForm.shelfCode,
+                barcodeNumber: editForm.barcodeNumber,
                 isAvailable: true
             });
 
@@ -162,6 +164,14 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
         }
     };
 
+    const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        // Regex: Sadece rakamlar
+        if (/^\d*$/.test(val)) {
+            setEditForm({ ...editForm, barcodeNumber: val });
+        }
+    };
+
     if (!isOpen || !book) return null;
 
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -201,7 +211,18 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                 <tr key={copy.id} className="hover:bg-amber-50/20">
 
                                     <td className="px-6 py-4 font-mono text-stone-600 font-medium">
-                                        {copy.barcodeNumber}
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editForm.barcodeNumber}
+                                                onChange={handleBarcodeChange}
+                                                className="border border-amber-300 rounded p-1 text-xs w-32 outline-none focus:ring-1 focus:ring-amber-500 text-black"
+                                                maxLength={13}
+                                                placeholder="Sadece Rakam"
+                                            />
+                                        ) : (
+                                            copy.barcodeNumber
+                                        )}
                                     </td>
 
                                     <td className="px-6 py-4">
