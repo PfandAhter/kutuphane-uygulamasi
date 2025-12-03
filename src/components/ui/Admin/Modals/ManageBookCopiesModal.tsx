@@ -17,7 +17,6 @@ interface ManageCopiesProps {
 }
 
 export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate }: ManageCopiesProps) {
-    // --- STATE ---
     const [copies, setCopies] = useState<BookCopy[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -25,11 +24,9 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
 
     const [loading, setLoading] = useState(false);
 
-    // Pagination State
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
-    // Editing State
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({ roomId: 0, shelfCode: '' });
 
@@ -53,16 +50,11 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     }, [editForm.roomId, editingId]);
 
 
-    // --- API CALLS ---
-
     const fetchInitialData = async () => {
         setLoading(true);
         try {
-            // Odaları bir kere çekelim (select box için)
             const roomData = await roomService.getRooms();
             if(Array.isArray(roomData)) setRooms(roomData);
-
-            // İlk sayfa kopyaları çek
             await fetchCopies(1);
         } catch (error) {
             console.error(error);
@@ -77,8 +69,17 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
             const result = await bookCopyService.getCopiesByBookId(book.id, pageNum, pageSize);
             setCopies(result.items || []);
             setTotalCount(result.totalCount || 0);
-        } catch (error) {
-            toast.error("Kopyalar yüklenemedi.");
+        } catch (error:any) {
+            const toastId = toast.error("Kopyalar yüklenemedi.");
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         }
     };
 
@@ -90,8 +91,6 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
             console.error("Raflar yüklenemedi");
         }
     };
-
-    // --- HANDLERS ---
 
     const handleEditClick = (copy: BookCopy) => {
         setEditingId(copy.id);
@@ -108,8 +107,9 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
     };
 
     const handleSave = async (copyId: number) => {
+        const toastId = toast.loading("Kopya güncelleniyor...");
         if (editForm.roomId === 0 || !editForm.shelfCode) {
-            return toast.error("Lütfen oda ve raf seçiniz.");
+            return toast.error("Lütfen oda ve raf seçiniz.", { id: toastId });
         }
 
         try {
@@ -120,41 +120,55 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                 isAvailable: true
             });
 
-            toast.success("Kopya güncellendi.");
+            toast.success("Kopya güncellendi.", { id: toastId });
             setEditingId(null);
             fetchCopies(page);
             onUpdate();
-        } catch (error) {
-            toast.error("Güncelleme başarısız.");
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         }
     };
 
     const handleDelete = async (copyId: number) => {
+        const toastId = toast.loading("Kopya siliniyor...");
         if (!confirm("Bu kopya kalıcı olarak silinecek. Emin misiniz?")) return;
         try {
             await bookCopyService.deleteCopy(copyId);
-            toast.success("Kopya silindi.");
-            // Eğer sayfadaki son elemanı sildiysek bir önceki sayfaya git
+            toast.success("Kopya silindi.", { id: toastId });
             if (copies.length === 1 && page > 1) {
                 setPage(p => p - 1);
             } else {
                 fetchCopies(page);
             }
             onUpdate();
-        } catch (error) {
-            toast.error("Silme işlemi başarısız.");
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         }
     };
 
     if (!isOpen || !book) return null;
 
     const totalPages = Math.ceil(totalCount / pageSize);
-
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl border border-stone-200 flex flex-col max-h-[90vh]">
 
-                {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50 rounded-t-lg">
                     <div>
                         <h3 className="font-serif font-bold text-amber-950">Kopyaları Yönet</h3>
@@ -163,7 +177,6 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                     <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold px-2">✕</button>
                 </div>
 
-                {/* Content Table */}
                 <div className="p-0 overflow-y-auto flex-1 relative">
                     {loading && (
                         <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
@@ -187,12 +200,10 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                             return (
                                 <tr key={copy.id} className="hover:bg-amber-50/20">
 
-                                    {/* 1. Barkod (Sabit) */}
                                     <td className="px-6 py-4 font-mono text-stone-600 font-medium">
                                         {copy.barcodeNumber}
                                     </td>
 
-                                    {/* 2. Oda (Düzenlenebilir) */}
                                     <td className="px-6 py-4">
                                         {isEditing ? (
                                             <select
@@ -214,18 +225,16 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                         )}
                                     </td>
 
-                                    {/* 3. Raf (Düzenlenebilir - Odaya Bağlı) */}
                                     <td className="px-6 py-4">
                                         {isEditing ? (
                                             <select
                                                 className="border border-amber-300 rounded p-1 text-xs text-black w-24 outline-none focus:ring-1 focus:ring-amber-500"
-                                                value={editForm.shelfCode} // Value artık shelfCode (string)
+                                                value={editForm.shelfCode}
                                                 onChange={(e) => setEditForm({ ...editForm, shelfCode: e.target.value })}
                                                 disabled={editForm.roomId === 0}
                                             >
                                                 <option value="">Raf Seç</option>
                                                 {availableShelves.map(s => (
-                                                    // Value olarak shelfCode veriyoruz
                                                     <option key={s.id} value={s.shelfCode}>{s.shelfCode}</option>
                                                 ))}
                                             </select>
@@ -236,7 +245,6 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                         )}
                                     </td>
 
-                                    {/* 4. Durum */}
                                     <td className="px-6 py-4">
                                         {copy.isAvailable
                                             ? <span className="text-green-700 bg-green-50 px-2 py-1 rounded-full text-xs border border-green-200 font-bold">Müsait</span>
@@ -244,7 +252,6 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                                         }
                                     </td>
 
-                                    {/* 5. İşlemler */}
                                     <td className="px-6 py-4 text-right">
                                         {isEditing ? (
                                             <div className="flex justify-end gap-2">
@@ -293,7 +300,6 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                     </table>
                 </div>
 
-                {/* Footer / Pagination */}
                 <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-lg flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <button

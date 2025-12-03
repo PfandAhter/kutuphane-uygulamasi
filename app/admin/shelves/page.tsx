@@ -11,6 +11,7 @@ import AddRoomModal from '@/src/components/ui/Admin/Modals/AddRoomModal';
 import AddShelfModal from '@/src/components/ui/Admin/Modals/AddShelfModal';
 import UpdateShelfModal from '@/src/components/ui/Admin/Modals/UpdateShelfModal';
 import UpdateRoomModal from '@/src/components/ui/Admin/Modals/UpdateRoomModal';
+import toast from "react-hot-toast";
 
 export default function AdminShelvesPage() {
     // --- STATE ---
@@ -80,51 +81,101 @@ export default function AdminShelvesPage() {
     };
 
     const handleUpdateRoomSubmit = async (id: number, data: CreateRoomDto) => {
-        await roomService.updateRoom(id, data);
-        setIsUpdateRoomModalOpen(false);
-        fetchRooms();
+        const toastId = toast.loading("Oda güncelleniyor...");
+        try{
+            await roomService.updateRoom(id, data);
+            setIsUpdateRoomModalOpen(false);
+            fetchRooms();
+        }catch(error:any){
+            console.error("Oda Guncellenemedi", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        }
     };
 
     const handleUpdateShelfSubmit = async (id: number, data: { roomId: number, shelfCode: string }) => {
-        await shelfService.updateShelf(id, data);
-        setIsUpdateShelfModalOpen(false);
+        const toastId = toast.loading("Raf güncelleniyor...");
+        try{
+            await shelfService.updateShelf(id, data);
+            setIsUpdateShelfModalOpen(false);
 
-        if (selectedRoom) fetchShelves(selectedRoom.id);
+            if (selectedRoom) fetchShelves(selectedRoom.id);
+        }catch(error:any){
+            console.error("Raf Guncellenemedi.", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        }
     };
 
-    // --- HANDLERS (Modal Submit) ---
     const handleRoomSubmit = async (data: CreateRoomDto) => {
-        await roomService.createRoom(data);
-        setIsRoomModalOpen(false);
-        fetchRooms(); // Listeyi yenile
+        const toastId = toast.loading("Oda oluşturuluyor...");
+        try{
+            await roomService.createRoom(data);
+            setIsRoomModalOpen(false);
+            fetchRooms();
+        }catch(error:any ){
+            console.error("Room eklenemedi", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        }
     };
 
     const handleShelfSubmit = async (shelfCode: string) => {
         if (!selectedRoom) return;
 
-
+        const toastId = toast.loading("Raf ekleniyor...");
         const dto: CreateShelfDto = {
             roomId: selectedRoom.id,
             shelfCode: shelfCode
         };
-        await shelfService.createShelf(dto);
-        setIsShelfModalOpen(false);
-        fetchShelves(selectedRoom.id);
+        try{
+            await shelfService.createShelf(dto);
+            setIsShelfModalOpen(false);
+            fetchShelves(selectedRoom.id);
+        }catch(error:any){
+            console.error("Raf eklenemedi", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        }
     };
 
     return (
         <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
 
-            {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold text-stone-800 font-serif">Yerleşim Yönetimi</h1>
                 <p className="text-stone-500 text-sm">Oda ve raf hiyerarşisini buradan yönetebilirsiniz.</p>
             </div>
 
-            {/* Content Panels */}
             <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-
-                {/* Sol Panel: Odalar */}
                 <RoomListPanel
                     rooms={rooms}
                     selectedRoom={selectedRoom}
@@ -133,8 +184,6 @@ export default function AdminShelvesPage() {
                     onAddClick={() => setIsRoomModalOpen(true)}
                     onEditClick={handleOpenEditRoom}
                 />
-
-                {/* Sağ Panel: Raflar */}
                 <ShelfListPanel
                     shelves={shelves}
                     selectedRoom={selectedRoom}
@@ -143,8 +192,6 @@ export default function AdminShelvesPage() {
                     onEditClick={handleOpenEditShelf}
                 />
             </div>
-
-            {/* Modals */}
             <AddRoomModal
                 isOpen={isRoomModalOpen}
                 onClose={() => setIsRoomModalOpen(false)}

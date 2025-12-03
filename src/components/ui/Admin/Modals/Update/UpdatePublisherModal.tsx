@@ -31,8 +31,17 @@ export default function UpdatePublisherModal({ isOpen, onClose, publisher, onSuc
             toast.success("Yayınevi güncellendi!", { id: toastId });
             onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Güncelleme başarısız.", { id: toastId });
+        } catch (error:any) {
+            console.log("Publisher update ederken hata: ",error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }

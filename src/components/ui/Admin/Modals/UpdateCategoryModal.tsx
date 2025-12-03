@@ -13,7 +13,6 @@ interface Props {
 }
 
 export default function UpdateCategoryModal({ isOpen, onClose, category, onSuccess }: Props) {
-    // State'i doğrudan prop'tan başlatıyoruz (Key yöntemiyle resetlenecek)
     const [name, setName] = useState(category?.name || '');
     const [loading, setLoading] = useState(false);
 
@@ -30,10 +29,17 @@ export default function UpdateCategoryModal({ isOpen, onClose, category, onSucce
             await categoryService.updateCategory(category.id, { name });
 
             toast.success("Kategori güncellendi!", { id: toastId });
-            onSuccess(); // Listeyi yenile
-            onClose();   // Modalı kapat
-        } catch (error) {
-            toast.error("Güncelleme başarısız.", { id: toastId });
+            onSuccess();
+            onClose();
+        } catch (error:any) {
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }

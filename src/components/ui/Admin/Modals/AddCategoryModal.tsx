@@ -31,7 +31,15 @@ export default function AddCategoryModal({ isOpen, onClose, onSuccess }: Props) 
             onClose();
         } catch (error: any) {
             console.error("Kategori eklenemedi", error.response.data);
-            toast.error(error.response.data, { id: toastId });
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }
