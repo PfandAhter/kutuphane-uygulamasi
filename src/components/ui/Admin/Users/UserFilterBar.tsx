@@ -59,8 +59,7 @@ export default function UserFilterBar({ filters, onFilterChange, onSearch, onCle
                 >
                     <option value="">Tüm Roller</option>
                     <option value="Admin">Admin</option>
-                    <option value="Member">Üye</option>
-                    <option value="Librarian">Kütüphaneci</option>
+                    <option value="User">Üye</option>
                 </select>
                 <select
                     name="hasFine"
