@@ -60,6 +60,7 @@ export default function LoginPage() {
                         <input
                             type="email"
                             value={email}
+                            placeholder={"ornek@gmail.com"}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
@@ -72,6 +73,7 @@ export default function LoginPage() {
                         <input
                             type="password"
                             value={password}
+                            placeholder={"Parolanızı girin"}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
