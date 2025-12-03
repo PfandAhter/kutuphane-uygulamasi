@@ -17,6 +17,12 @@ export interface BookCopy {
     shelf: Shelf;
 }
 
+export interface UpdateBookCopyDto{
+    id: number;
+    shelfId: number;
+    //isAvailable: boolean;
+}
+
 export interface BookDetail {
     id: number;
     title: string;
