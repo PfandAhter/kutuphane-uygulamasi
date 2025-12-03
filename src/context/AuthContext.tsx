@@ -1,54 +1,31 @@
 'use client';
 
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {AuthContextType} from "@/src/types/authContextType";
-import {AuthResponse, LoginDto, RegisterDto, UserProfile} from "@/src/types/auth";
-import {authService} from "@/src/services/authService";
-import {userService} from "@/src/services/userService";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AuthContextType } from "@/src/types/authContextType";
+import { AuthResponse, LoginDto, RegisterDto, UserProfile } from "@/src/types/auth";
+import { authService } from "@/src/services/authService";
+import { userService } from "@/src/services/userService";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const getInitialUser = (): UserProfile | null => {
-    if (typeof window === 'undefined') return null;
-
-    const token = localStorage.getItem("token");
-    const userProfileString = localStorage.getItem("userProfile");
-
-    const refreshToken = localStorage.getItem("refreshToken");
-
-
-    if ((token && userProfileString) && !refreshToken) {
-        try {
-            return JSON.parse(userProfileString);
-        } catch (err) {
-            console.error("Error parsing user profile from localStorage", err);
-            localStorage.removeItem("userProfile");
-            localStorage.removeItem("token");
-            return null;
-        }
+// Helper: Başlangıç tokenını al (Server-Client uyumsuzluğunu önlemek için sadece client'ta çalışır)
+const getStoredToken = (): string | null => {
+    if (typeof window !== 'undefined') {
+        return localStorage.getItem("token");
     }
     return null;
 };
 
-const getInitialToken = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem("token");
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
-};
-
-export const AuthProvider = ({children}: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<UserProfile | null>(() => getInitialUser());
-    const [token, setToken] = useState<string | null>(() => getInitialToken());
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    // 1. State'leri boş başlatıyoruz (Hydration Error önlemek için)
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [token, setToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    // 2. KRİTİK: Başlangıçta loading TRUE olmalı. Yoksa veri okunmadan sayfadan atar.
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    // 3. Sayfa yüklendiğinde (Mount) LocalStorage'ı oku
     useEffect(() => {
         const initializeAuth = () => {
             if (typeof window !== 'undefined') {
@@ -56,17 +33,20 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
                 const storedRefreshToken = localStorage.getItem("refreshToken");
                 const storedUserProfile = localStorage.getItem("userProfile");
 
+                // Token ve Profil varsa state'i doldur
                 if (storedToken && storedUserProfile) {
                     try {
+                        const parsedUser = JSON.parse(storedUserProfile);
                         setToken(storedToken);
                         setRefreshToken(storedRefreshToken);
-                        setUser(JSON.parse(storedUserProfile));
+                        setUser(parsedUser);
                     } catch (error) {
-                        console.error("Error parsing auth data:", error);
+                        console.error("Auth verisi bozuk, temizleniyor:", error);
                         localStorage.clear();
                     }
                 }
             }
+            // İşlem bitti, yükleme durumunu kapat
             setIsLoading(false);
         };
 
@@ -76,20 +56,25 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     const login = async (dto: LoginDto) => {
         try {
             setIsLoading(true);
-            console.log("AuthContext login called for user email:", dto.email);
             const response: AuthResponse = await authService.login(dto);
 
+            // Önce Token'ı kaydet (UserService token kullanıyor olabilir)
             localStorage.setItem("token", response.token);
             localStorage.setItem("refreshToken", response.refreshToken);
 
+            // Sonra kullanıcı bilgisini çek
             const userProfileDetails: UserProfile = await userService.getUserInfo();
             localStorage.setItem("userProfile", JSON.stringify(userProfileDetails));
 
+            // State'leri güncelle
             setRefreshToken(response.refreshToken);
             setToken(response.token);
             setUser(userProfileDetails);
         } catch (error) {
-            console.log("Login error:", error);
+            console.error("Login error:", error);
+            // Hata durumunda yarım kalmış verileri temizle
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
             throw error;
         } finally {
             setIsLoading(false);
@@ -101,7 +86,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
             setIsLoading(true);
             await authService.register(dto);
         } catch (error) {
-            console.log("Register error:", error);
+            console.error("Register error:", error);
             throw error;
         } finally {
             setIsLoading(false);
@@ -110,12 +95,14 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userProfile');
         setToken(null);
+        setRefreshToken(null);
         setUser(null);
+        // İsteğe bağlı: Router ile login sayfasına yönlendirilebilir
     };
 
-    // userId'yi user objesinden türet (user.id veya user.userId - senin UserProfile yapına göre)
     const userId = user?.id ?? null;
 
     return (

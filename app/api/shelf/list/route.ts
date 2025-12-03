@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
                 ...(authHeader && { "Authorization": authHeader })
             }
         });
-        console.log("Proxy GET /api/shelf/list succeeded", response.data);
+        console.log("Proxy GET /api/shelf/list succeeded");
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
         console.error("Proxy GET /api/shelf/list error: ", err?.message);
