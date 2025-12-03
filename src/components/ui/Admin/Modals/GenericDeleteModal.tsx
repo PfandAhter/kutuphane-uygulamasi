@@ -35,11 +35,19 @@ export default function GenericDeleteModal({
             await onDeleteService(entityId);
 
             toast.success(`${entityType} başarıyla silindi.`, { id: toastId });
-            onSuccess(); // Listeyi yenile
-            onClose();   // Modalı kapat
+            onSuccess();
+            onClose();
         } catch (error: any) {
-            console.error(error);
-            toast.error(error.response.data, { id: toastId });
+            console.error("Kategori silme hatasi: ", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }

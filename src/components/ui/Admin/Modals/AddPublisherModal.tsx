@@ -29,8 +29,17 @@ export default function AddPublisherModal({ isOpen, onClose, onSuccess }: Props)
             setName('');
             onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Hata oluştu.", { id: toastId });
+        } catch (error:any) {
+            console.error("Publisher eklerken hata: ", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }
