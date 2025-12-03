@@ -163,7 +163,6 @@ export default function BookDetailPage() {
             <BorrowBookModal
                 isOpen={isBorrowModalOpen}
                 onClose={handleCloseModal}
-                barcode={defaultBarcode} // Otomatik bulunan barkodu gönder
                 bookTitle={book.title}
                 onSuccess={handleBorrowSuccess}
             />

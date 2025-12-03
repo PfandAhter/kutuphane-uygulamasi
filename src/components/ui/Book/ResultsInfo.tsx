@@ -10,12 +10,6 @@ export default function ResultsInfo({ totalCount }: ResultsInfoProps) {
             <h2 className="font-serif font-semibold text-amber-900 text-lg">
                 Arama Sonuçları: <span className="text-amber-700 font-bold ml-1">{totalCount} Eser bulundu</span>
             </h2>
-
-            <select className="border border-amber-300 bg-white text-amber-900 p-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-600 cursor-pointer">
-                <option>Akıllı Sıralama</option>
-                <option>Fiyata Göre (Artan)</option>
-                <option>Fiyata Göre (Azalan)</option>
-            </select>
         </div>
     );
 }
