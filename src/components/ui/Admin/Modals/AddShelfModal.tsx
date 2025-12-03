@@ -20,18 +20,9 @@ export default function AddShelfModal({ isOpen, onClose, selectedRoom, onSubmit 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const toastId = toast.loading('Raf ekleniyor...');
-
-        try{
-            await onSubmit(shelfCode);
-
-            toast.success('Raf başarıyla eklendi!', { id: toastId });
-            setShelfCode('');
-        }catch(err){
-            toast.error('Raf eklenirken bir hata oluştu.', { id: toastId });
-        }finally {
-            setLoading(false);
-        }
+        await onSubmit(shelfCode);
+        setShelfCode('');
+        setLoading(false);
     };
 
     return (

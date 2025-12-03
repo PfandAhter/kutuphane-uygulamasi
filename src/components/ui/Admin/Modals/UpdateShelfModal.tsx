@@ -39,16 +39,8 @@ export default function UpdateShelfModal({ isOpen, onClose, shelf, currentRoomId
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const toastId = toast.loading('Raf güncelleniyor...');
-        try{
-            await onSubmit(shelf.id, { roomId, shelfCode });
-
-            toast.success('Raf başarıyla güncellendi!', { id: toastId });
-        }catch(err){
-            toast.error('Güncelleme sırasında bir hata oluştu.', { id: toastId });
-        }finally {
-            setLoading(false);
-        }
+        await onSubmit(shelf.id, { roomId, shelfCode });
+        setLoading(false);
     };
 
     return (

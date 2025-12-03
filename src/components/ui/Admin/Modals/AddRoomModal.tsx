@@ -19,18 +19,9 @@ export default function AddRoomModal({ isOpen, onClose, onSubmit }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const toastId = toast.loading('Oda oluşturuluyor...');
-
-        try{
-            await onSubmit(form);
-            setForm({ roomCode: '', description: '' });
-
-            toast.success('Oda başarıyla oluşturuldu!', { id: toastId });
-        }catch(err){
-            toast.error('Oda oluşturulurken bir hata oluştu.', { id: toastId });
-        }finally {
-            setLoading(false);
-        }
+        await onSubmit(form);
+        setForm({ roomCode: '', description: '' });
+        setLoading(false);
     };
 
     return (
