@@ -85,6 +85,8 @@ export default function AdminShelvesPage() {
         try{
             await roomService.updateRoom(id, data);
             setIsUpdateRoomModalOpen(false);
+
+            toast.success("Oda başarıyla güncellendi.", { id: toastId });
             fetchRooms();
         }catch(error:any){
             console.error("Oda Guncellenemedi", error.response.data);
@@ -106,6 +108,7 @@ export default function AdminShelvesPage() {
             await shelfService.updateShelf(id, data);
             setIsUpdateShelfModalOpen(false);
 
+            toast.success("Raf başarıyla güncellendi.", { id: toastId });
             if (selectedRoom) fetchShelves(selectedRoom.id);
         }catch(error:any){
             console.error("Raf Guncellenemedi.", error.response.data);
@@ -126,6 +129,7 @@ export default function AdminShelvesPage() {
         try{
             await roomService.createRoom(data);
             setIsRoomModalOpen(false);
+            toast.success("Oda başarıyla eklendi.", { id: toastId });
             fetchRooms();
         }catch(error:any ){
             console.error("Room eklenemedi", error.response.data);
@@ -152,6 +156,7 @@ export default function AdminShelvesPage() {
         try{
             await shelfService.createShelf(dto);
             setIsShelfModalOpen(false);
+            toast.success("Raf başarıyla eklendi.", { id: toastId });
             fetchShelves(selectedRoom.id);
         }catch(error:any){
             console.error("Raf eklenemedi", error.response.data);
