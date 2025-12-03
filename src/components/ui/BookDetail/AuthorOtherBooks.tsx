@@ -50,7 +50,7 @@ const AuthorOtherBooks = ({ authorId, authorName, categoryId, currentBookId }: P
             <div className="flex flex-col gap-4">
                 {books.map((book) => (
                     <Link
-                        href={`/books/${book.id}`}
+                        href={`/book/${book.id}`}
                         key={book.id}
                         className="group flex gap-3 items-start hover:bg-stone-50 p-2 rounded transition-colors"
                     >
