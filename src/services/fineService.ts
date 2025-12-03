@@ -1,6 +1,7 @@
 import axiosInstance from "@/src/utils/axiosInstance";
 import {AssignFineDto, FineType} from "@/src/types/fine";
 import {UserFineDto} from "@/src/types/user";
+import {PaginatedResult} from "@/src/types/book";
 
 const API_ROUTE_BASE = "/api/fine";
 
@@ -38,6 +39,20 @@ export const fineService = {
             console.error("Kullanıcı cezaları alınamadı:", error);
             return [];
         }
+    },
+
+    getMyActiveFines: async (page: number, size: number): Promise<PaginatedResult<UserFineDto>> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/get-active-fines?page=${page}&pageSize=${size}`, {
+            baseURL: ''
+        });
+        return response.data;
+    },
+
+    getMyHistoryFines: async (page: number, size: number): Promise<PaginatedResult<UserFineDto>> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/get-past-fines?page=${page}&pageSize=${size}`, {
+            baseURL: ''
+        });
+        return response.data;
     },
 
     payFine: async (userId: string): Promise<void> => { //TODO: Burada kullanici kendi yapacagi icin admin yetkisi gerekmeyecek.

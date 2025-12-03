@@ -18,16 +18,16 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
     // Form State'leri
     const [barcode, setBarcode] = useState("");
     const [roomId, setRoomId] = useState("");
-    const [shelfId, setShelfId] = useState(""); // UI'da ID tutuyoruz, Code'u bulacağız
+    const [shelfId, setShelfId] = useState("");
     const [loading, setLoading] = useState(false);
 
     // Data States
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [shelves, setShelves] = useState<Shelf[]>([]); // YENİ: Raflar için state
+    const [shelves, setShelves] = useState<Shelf[]>([]);
 
     // Loading States
     const [roomsLoading, setRoomsLoading] = useState(false);
-    const [shelvesLoading, setShelvesLoading] = useState(false); // YENİ
+    const [shelvesLoading, setShelvesLoading] = useState(false);
 
     // 1. MODAL AÇILINCA ODALARI ÇEK
     useEffect(() => {
@@ -53,7 +53,6 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
 
         loadRooms();
 
-        // Temizlik: Modal kapanınca stateleri sıfırla
         return () => {
             mounted = false;
             setBarcode("");
@@ -63,11 +62,10 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
         };
     }, [isOpen]);
 
-    // 2. ODA SEÇİLİNCE RAFLARI ÇEK (CASCADE LOADING)
     useEffect(() => {
         if (!roomId) {
             setShelves([]);
-            setShelfId(""); // Oda değişince rafı sıfırla
+            setShelfId("");
             return;
         }
 
@@ -89,6 +87,13 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
     }, [roomId]);
 
     if (!isOpen || !book) return null;
+
+    const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (/^\d*$/.test(val)) {
+            setBarcode(val);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -113,7 +118,7 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
             bookId: book.id,
             barcodeNumber: barcode,
             roomId: parsedRoomId,
-            shelfCode: selectedShelf.shelfCode // Backend shelfCode istiyor
+            shelfCode: selectedShelf.shelfCode
         };
 
         try {
@@ -169,11 +174,12 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
                             inputMode="numeric"
                             required
                             maxLength={50}
-                            placeholder="Örn: 202400156"
+                            placeholder="Sadece rakam giriniz (Örn: 202400156)"
                             value={barcode}
-                            onChange={(e) => setBarcode(e.target.value)}
-                            className="w-full border text-black rounded p-2 text-sm focus:border-amber-500 outline-none"
+                            onChange={handleBarcodeChange}
+                            className="w-full border text-black rounded p-2 text-sm focus:border-amber-500 outline-none transition-all font-mono"
                         />
+                        <p className="text-[10px] text-stone-400 mt-1">Sadece sayısal değerler kabul edilir.</p>
                     </div>
 
                     {/* Oda Seçimi */}

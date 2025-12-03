@@ -1,5 +1,5 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import {CreateLoanDto, LoanWithUserDetailsDto} from '@/src/types/loan';
+import {CreateLoanDto, LoanDto, LoanWithUserDetailsDto} from '@/src/types/loan';
 import {PaginatedResult} from "@/src/types/book";
 
 const API_ROUTE_BASE = "/api/loans";
@@ -36,5 +36,19 @@ export const loanService = {
         await axiosInstance.post(`${API_ROUTE_BASE}/loans/return/${loanId}`,{
             baseURL: '',
         });
+    },
+
+    getMyActiveLoans: async (page: number, size: number): Promise<PaginatedResult<LoanDto>> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/my-active-loans?page=${page}&pageSize=${size}`, {
+            baseURL: '',
+        });
+        return response.data;
+    },
+
+    getMyPastLoans: async (page: number, size: number): Promise<PaginatedResult<LoanDto>> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/my-returned-loans?page=${page}&pageSize=${size}`, {
+            baseURL: '',
+        });
+        return response.data;
     }
 };

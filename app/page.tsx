@@ -4,19 +4,19 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/hooks/useAuth";
 
-// Layout & UI Components
 import Header from "@/src/components/ui/Header";
 import Sidebar from "@/src/components/ui/Sidebar";
 import BookGrid from "@/src/components/ui/Book/BookGrid";
 import Pagination from "@/src/components/ui/Book/Pagination";
 import ResultsInfo from "@/src/components/ui/Book/ResultsInfo";
 
-// New Refactored Components
 import AuthenticatedBanner from "@/src/components/ui/Home/AuthenticatedBanner";
 import GuestBanner from "@/src/components/ui/Home/GuestBanner";
 import MobileFilterButton from "@/src/components/ui/Home/MobileFilterButton";
+import QuickActionButtons from "@/src/components/ui/Home/QuickActionButtons";
+import BorrowBookModal from "@/src/components/ui/Book/BorrowBookModal";
+import ReturnBookModal from "@/src/components/ui/Book/ReturnBookModal";
 
-// Services & Types
 import { bookService } from "@/src/services/bookService";
 import { BookFilterDto, Book } from "@/src/types/book";
 
@@ -25,7 +25,6 @@ function HomeContent() {
     const { isAuthenticated, user } = useAuth();
     const searchParams = useSearchParams();
 
-    // --- State Management ---
     const pageParam = searchParams?.get("page") ?? "1";
     const page = parseInt(pageParam, 10) || 1;
     const size = 12;
@@ -36,7 +35,9 @@ function HomeContent() {
     const [loading, setLoading] = useState(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-    // --- Handlers ---
+    const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams?.toString());
         params.set("page", newPage.toString());
@@ -77,23 +78,15 @@ function HomeContent() {
 
     return (
         <div className="min-h-screen bg-[#F5F5F4] flex flex-col font-sans">
-            <Suspense fallback={<div className="bg-amber-950 h-20"></div>}>
+            <Suspense fallback={<div className="bg-white h-16 border-b border-stone-200"></div>}>
                 <Header />
             </Suspense>
 
             <main className="container mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-6 lg:gap-8 transition-all">
 
-                {/* 1. Mobile Filter Toggle */}
-                <MobileFilterButton
-                    isOpen={showMobileFilters}
-                    onClick={() => setShowMobileFilters(!showMobileFilters)}
-                />
+                <MobileFilterButton isOpen={showMobileFilters} onClick={() => setShowMobileFilters(!showMobileFilters)} />
 
-                {/* 2. Sidebar (Filters) */}
-                <aside className={`
-                    lg:block lg:w-72 shrink-0 transition-all duration-300 ease-in-out z-20
-                    ${showMobileFilters ? 'block' : 'hidden'}
-                `}>
+                <aside className={`lg:block lg:w-72 shrink-0 transition-all duration-300 ease-in-out z-20 ${showMobileFilters ? 'block' : 'hidden'}`}>
                     <div className="sticky top-24">
                         <Suspense fallback={<div className="w-full h-96 bg-stone-200 animate-pulse rounded-xl"></div>}>
                             <Sidebar />
@@ -101,51 +94,63 @@ function HomeContent() {
                     </div>
                 </aside>
 
-                {/* 3. Main Content Area */}
                 <section className="flex-1 min-w-0">
 
-                    {/* Dynamic Banner */}
                     {isAuthenticated && user ? (
-                        <AuthenticatedBanner
-                            user={user}
-                            totalBookCount={totalCount}
-                            onProfileClick={() => router.push('/profile')}
-                        />
+                        <>
+                            <AuthenticatedBanner
+                                user={user}
+                                totalBookCount={totalCount}
+                                onProfileClick={() => router.push('/profile')}
+                            />
+
+                            <QuickActionButtons
+                                onBorrowClick={() => setIsBorrowModalOpen(true)}
+                                onReturnClick={() => setIsReturnModalOpen(true)}
+                            />
+                        </>
                     ) : (
                         <GuestBanner />
                     )}
 
-                    {/* Results & Grid */}
                     <div className="flex flex-col gap-4">
                         <ResultsInfo totalCount={totalCount} />
                         <BookGrid books={books} loading={loading} />
                     </div>
 
-                    {/* Pagination */}
                     {!loading && totalCount > 0 && (
                         <div className="mt-10 flex justify-center pb-8">
-                            <Pagination
-                                page={page}
-                                totalPages={totalPages}
-                                onPageChange={handlePageChange}
-                            />
+                            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
                         </div>
                     )}
                 </section>
             </main>
+
+            <BorrowBookModal
+                isOpen={isBorrowModalOpen}
+                onClose={() => setIsBorrowModalOpen(false)}
+                bookTitle="Hızlı Ödünç İşlemi" // Genel bir başlık
+                onSuccess={() => {
+                    // Başarılı olursa (örneğin stok azalırsa) listeyi yenileyebiliriz
+                    // Şimdilik sadece modalı kapatalım veya sayfayı yenileyelim
+                    // router.refresh();
+                }}
+            />
+
+            <ReturnBookModal
+                isOpen={isReturnModalOpen}
+                onClose={() => setIsReturnModalOpen(false)}
+            />
+
         </div>
     );
 }
 
-// --- Main Page Component ---
 export default function Home() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-800 rounded-full animate-spin"></div>
-                    <span className="text-amber-900 font-serif font-medium animate-pulse">Kütüphane Yükleniyor...</span>
-                </div>
+                <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-800 rounded-full animate-spin"></div>
             </div>
         }>
             <HomeContent />
