@@ -44,9 +44,10 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const toastId = toast.loading("Girişler kontrol ediliyor...");
 
         if (!inputBarcode.trim()) {
-            return toast.error("Lütfen barkod numarasını giriniz.");
+            return toast.error("Lütfen barkod numarasını giriniz." , { id: toastId });
         }
 
         const start = new Date(startDate);
@@ -54,7 +55,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
 
         // Tarih kontrolü
         if (end <= start) {
-            return toast.error("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.");
+            return toast.error("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.", { id: toastId });
         }
 
         // --- GÜN SAYISI HESAPLAMA ---
@@ -62,12 +63,12 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
         const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
 
         setLoading(true);
-        const toastId = toast.loading("Ödünç verme işlemi yapılıyor...");
+        toast.loading("Ödünç verme işlemi yapılıyor...", { id: toastId });
 
         try {
             // Servise sadece barkod ve gün sayısı gidiyor
             await loanService.createLoan({
-                barcodeNumber: inputBarcode.trim(),
+                barcode: inputBarcode.trim(),
                 loanDays: diffInDays
             });
 
@@ -75,8 +76,15 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
             onSuccess();
             onClose();
         } catch (error: any) {
-            const msg = error.response?.data?.message || "İşlem başarısız.";
-            toast.error(msg, { id: toastId });
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }

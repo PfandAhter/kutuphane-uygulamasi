@@ -1,5 +1,5 @@
 export interface CreateLoanDto {
-    barcodeNumber: string;
+    barcode: string;
     loanDays: number;
 }
 
