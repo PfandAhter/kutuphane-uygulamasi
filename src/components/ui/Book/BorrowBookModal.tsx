@@ -7,30 +7,40 @@ import { loanService } from '@/src/services/loanService';
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    barcode: string;
     bookTitle: string;
     onSuccess: () => void;
 }
 
-export default function BorrowBookModal({ isOpen, onClose, barcode, bookTitle, onSuccess }: Props) {
+export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess }: Props) {
     const today = new Date().toISOString().split('T')[0];
 
+    // Varsayılan olarak 15 gün sonrası
     const defaultEnd = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const [inputBarcode, setInputBarcode] = useState(barcode);
+    const [inputBarcode, setInputBarcode] = useState('');
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(defaultEnd);
     const [loading, setLoading] = useState(false);
 
+    // Modal her açıldığında state'leri sıfırla
     useEffect(() => {
         if (isOpen) {
-            setInputBarcode(barcode);
+            setInputBarcode(''); // Barkod her zaman boş başlar
             setStartDate(today);
             setEndDate(defaultEnd);
         }
-    }, [isOpen, barcode, today, defaultEnd]);
+    }, [isOpen, today, defaultEnd]);
 
     if (!isOpen) return null;
+
+    // Sadece sayı girilmesini sağlayan fonksiyon
+    const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        // Regex: Sadece rakamlar (veya boşluk - silme işlemi için)
+        if (/^\d*$/.test(val)) {
+            setInputBarcode(val);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,13 +52,12 @@ export default function BorrowBookModal({ isOpen, onClose, barcode, bookTitle, o
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        // Tarih kontrolü (Bitiş, başlangıçtan küçük veya eşit olamaz)
+        // Tarih kontrolü
         if (end <= start) {
             return toast.error("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.");
         }
 
         // --- GÜN SAYISI HESAPLAMA ---
-        // Milisaniye farkını alıp güne çeviriyoruz
         const diffInMs = end.getTime() - start.getTime();
         const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
 
@@ -56,6 +65,7 @@ export default function BorrowBookModal({ isOpen, onClose, barcode, bookTitle, o
         const toastId = toast.loading("Ödünç verme işlemi yapılıyor...");
 
         try {
+            // Servise sadece barkod ve gün sayısı gidiyor
             await loanService.createLoan({
                 barcodeNumber: inputBarcode.trim(),
                 loanDays: diffInDays
@@ -85,45 +95,47 @@ export default function BorrowBookModal({ isOpen, onClose, barcode, bookTitle, o
 
                     {/* Barkod Giriş Alanı */}
                     <div>
-                        <label className="block text-xs font-bold text-black mb-1">Barkod Numarası</label>
+                        <label className="block text-xs font-bold text-stone-600 mb-1">Barkod Numarası</label>
                         <input
                             type="text"
                             required
                             autoFocus
+                            inputMode="numeric" // Mobil klavyeyi sayısal açar
                             value={inputBarcode}
-                            onChange={(e) => setInputBarcode(e.target.value)}
+                            onChange={handleBarcodeChange}
                             placeholder="Kitap barkodunu giriniz..."
-                            className="w-full border text-black rounded p-2.5 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all font-mono"
+                            className="w-full border border-stone-300 text-stone-800 rounded p-2.5 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all font-mono"
                         />
+                        <p className="text-[10px] text-stone-400 mt-1">Sadece rakam girebilirsiniz.</p>
                     </div>
 
                     {/* Başlangıç Tarihi */}
                     <div>
-                        <label className="block text-xs font-bold text-black mb-1">Başlangıç Tarihi</label>
+                        <label className="block text-xs font-bold text-stone-600 mb-1">Başlangıç Tarihi</label>
                         <input
                             type="date"
                             required
-                            min={today} // Bugünden öncesi seçilemez
+                            min={today}
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full border text-black rounded p-2 text-sm focus:border-amber-500 outline-none"
+                            className="w-full border border-stone-300 text-stone-800 rounded p-2 text-sm focus:border-amber-500 outline-none"
                         />
                     </div>
 
                     {/* Bitiş Tarihi */}
                     <div>
-                        <label className="block text-xs font-bold text-black mb-1">Bitiş Tarihi (Tahmini İade)</label>
+                        <label className="block text-xs font-bold text-stone-600 mb-1">Bitiş Tarihi (Tahmini İade)</label>
                         <input
                             type="date"
                             required
-                            min={startDate} // Başlangıç tarihinden öncesi seçilemez
+                            min={startDate}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full border text-black rounded p-2 text-sm focus:border-amber-500 outline-none"
+                            className="w-full border border-stone-300 text-stone-800 rounded p-2 text-sm focus:border-amber-500 outline-none"
                         />
                     </div>
 
-                    {/* Bilgilendirme: Kaç gün seçildiğini göster */}
+                    {/* Bilgilendirme: Gün Sayısı */}
                     {startDate && endDate && new Date(endDate) > new Date(startDate) && (
                         <div className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 text-center">
                             Süre: <strong>{Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24))}</strong> Gün
@@ -134,7 +146,7 @@ export default function BorrowBookModal({ isOpen, onClose, barcode, bookTitle, o
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-black hover:bg-stone-100 rounded font-medium transition-colors"
+                            className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded font-medium transition-colors"
                         >
                             İptal
                         </button>

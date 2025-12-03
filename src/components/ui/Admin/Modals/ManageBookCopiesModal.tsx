@@ -1,140 +1,155 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { BookCopy } from '@/src/types/bookDetail';
-import { Room } from '@/src/types/roomAndShelf';
+import { Room, Shelf } from '@/src/types/roomAndShelf';
 import { Book } from "@/src/types/book";
 import { roomService } from '@/src/services/roomService';
-import { bookService } from '@/src/services/bookService';
+import { shelfService } from '@/src/services/shelfService';
+import { bookCopyService } from '@/src/services/bookCopyService';
 
 interface ManageCopiesProps {
     isOpen: boolean;
     onClose: () => void;
     book: Book | null;
-    onUpdate: () => void;
+    onUpdate: () => void; // Ana sayfayı yenilemek istersek
 }
 
 export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate }: ManageCopiesProps) {
     // --- STATE ---
-    const [allCopies, setAllCopies] = useState<BookCopy[]>([]); // TÜM VERİ BURADA
+    const [copies, setCopies] = useState<BookCopy[]>([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [rooms, setRooms] = useState<Room[]>([]);
+    const [availableShelves, setAvailableShelves] = useState<Shelf[]>([]); // Düzenleme anındaki raflar
+
     const [loading, setLoading] = useState(false);
 
-    // UI States (Server'a gitmez, sadece görüntüyü değiştirir)
+    // Pagination State
     const [page, setPage] = useState(1);
-    const pageSize = 5; // Sayfa başı 5 kopya gösterelim
-    const [sortField, setSortField] = useState<string>('barcodeNumber');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const pageSize = 5;
 
-    // Editing States
+    // Editing State
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editForm, setEditForm] = useState({ roomId: 0, shelfCode: '' });
+    const [editForm, setEditForm] = useState({ roomId: 0, shelfId: 0 });
 
-    // --- DATA FETCHING (Sadece Açılışta 1 Kere) ---
+    // --- FETCH DATA ---
+
+    // 1. Modal açılınca Odaları ve İlk Sayfayı Çek
     useEffect(() => {
         if (isOpen && book) {
-            fetchAllData();
+            setPage(1);
+            fetchInitialData();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, book]);
 
-    const fetchAllData = async () => {
-        /*if (!book) return;
+    // 2. Sayfa değişince sadece Kopyaları Çek
+    useEffect(() => {
+        if (isOpen && book) {
+            fetchCopies(page);
+        }
+    }, [page]);
+
+    // 3. Düzenlerken Oda seçilirse o odanın raflarını getir
+    useEffect(() => {
+        if (editingId && editForm.roomId > 0) {
+            fetchShelvesForEdit(editForm.roomId);
+        }
+    }, [editForm.roomId, editingId]);
+
+
+    // --- API CALLS ---
+
+    const fetchInitialData = async () => {
         setLoading(true);
         try {
-            // Paralel istek atalım (Odalar ve Kopyalar)
-            const [roomsData, copiesResult] = await Promise.all([
-                roomService.getRooms(),
-                // Backend'e "Bana hepsini ver" diyoruz (size: 1000)
-                //bookService.getCopiesByBookId({ bookId: book.id, page: 1, size: 1000 })
-            ]);
+            // Odaları bir kere çekelim (select box için)
+            const roomData = await roomService.getRooms();
+            if(Array.isArray(roomData)) setRooms(roomData);
 
-            if (Array.isArray(roomsData)) setRooms(roomsData);
-            // Gelen tüm kopyaları state'e atıyoruz
-            setAllCopies(copiesResult.items || []);
-
+            // İlk sayfa kopyaları çek
+            await fetchCopies(1);
         } catch (error) {
-            console.error("Veri hatası:", error);
+            console.error(error);
         } finally {
             setLoading(false);
-        }*/
+        }
     };
 
-    // --- CLIENT-SIDE LOGIC (Sihirli Kısım) ---
+    const fetchCopies = async (pageNum: number) => {
+        if (!book) return;
+        try {
+            const result = await bookCopyService.getCopiesByBookId(book.id, pageNum, pageSize);
+            setCopies(result.items || []);
+            setTotalCount(result.totalCount || 0);
+        } catch (error) {
+            toast.error("Kopyalar yüklenemedi.");
+        }
+    };
 
-    // filteredAndSortedCopies: Her render'da değil, sadece dependency değişince çalışır.
-    const visibleCopies = useMemo(() => {
-        // 1. Sıralama (Sorting)
-        const sorted = [...allCopies].sort((a: any, b: any) => {
-            let valueA = a[sortField];
-            let valueB = b[sortField];
-
-            // İlişkili alanlar için özel kontrol (örn: roomCode)
-            if (sortField === 'roomCode') {
-                valueA = a.shelf?.room?.roomCode || '';
-                valueB = b.shelf?.room?.roomCode || '';
-            } else if (sortField === 'shelfCode') {
-                valueA = a.shelf?.shelfCode || '';
-                valueB = b.shelf?.shelfCode || '';
-            }
-
-            // String karşılaştırma
-            if (typeof valueA === 'string') {
-                return sortOrder === 'asc'
-                    ? valueA.localeCompare(valueB)
-                    : valueB.localeCompare(valueA);
-            }
-            // Sayısal karşılaştırma
-            return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
-        });
-
-        // 2. Sayfalama (Pagination)
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-
-        return sorted.slice(startIndex, endIndex);
-
-    }, [allCopies, sortField, sortOrder, page]); // Bu değişkenler değişince yeniden hesapla
+    const fetchShelvesForEdit = async (roomId: number) => {
+        try {
+            const shelves = await shelfService.getShelvesByRoomId(roomId);
+            if(Array.isArray(shelves)) setAvailableShelves(shelves);
+        } catch (error) {
+            console.error("Raflar yüklenemedi");
+        }
+    };
 
     // --- HANDLERS ---
 
-    const handleSort = (field: string) => {
-        if (sortField === field) {
-            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortOrder('asc');
-        }
-        setPage(1); // Sıralama değişince sayfa 1'e dön
+    const handleEditClick = (copy: BookCopy) => {
+        setEditingId(copy.id);
+        // Mevcut değerleri forma ata
+        /*setEditForm({
+            roomId: copy.shelf?.roomId || 0,
+            shelfId: copy.shelf.shelfCode
+        });*/
+        // Mevcut odanın raflarını yükle ki select boş kalmasın
+        if(copy.shelf?.roomId) fetchShelvesForEdit(copy.shelf.roomId);
     };
 
-    // CRUD İşlemleri (Backend'e gider ama başarılı olursa lokal listeyi de günceller)
-    const handleSave = async (copyId: number) => {
-        // ... (API isteği aynı) ...
-        // Başarılı olursa tekrar fetch atmak yerine allCopies state'ini güncelle:
-        setAllCopies(prev => prev.map(c =>
-            c.id === copyId ? {
-                ...c,
-                shelf: { ...c.shelf, shelfCode: editForm.shelfCode, roomId: editForm.roomId, room: rooms.find(r => r.id === editForm.roomId)! }
-            } : c
-        ));
+    const handleCancelEdit = () => {
         setEditingId(null);
-        onUpdate();
+        setEditForm({ roomId: 0, shelfId: 0 });
+    };
+
+    const handleSave = async (copyId: number) => {
+        try {
+            await bookCopyService.updateCopy({
+                id: copyId,
+                shelfId: editForm.shelfId,
+                //isAvailable: true // Veya mevcut durumu koru
+            });
+            toast.success("Kopya güncellendi.");
+            setEditingId(null);
+            fetchCopies(page); // Listeyi tazele
+            onUpdate(); // Ana sayfaya haber ver
+        } catch (error) {
+            toast.error("Güncelleme başarısız.");
+        }
     };
 
     const handleDelete = async (copyId: number) => {
-        if (!confirm("Silinsin mi?")) return;
+        if (!confirm("Bu kopya kalıcı olarak silinecek. Emin misiniz?")) return;
         try {
-            //await bookService.deleteCopy(copyId);
-            // Backend'e tekrar sormadan listeden çıkar (Optimistic Update)
-            setAllCopies(prev => prev.filter(c => c.id !== copyId));
+            await bookCopyService.deleteCopy(copyId);
+            toast.success("Kopya silindi.");
+            // Eğer sayfadaki son elemanı sildiysek bir önceki sayfaya git
+            if (copies.length === 1 && page > 1) {
+                setPage(p => p - 1);
+            } else {
+                fetchCopies(page);
+            }
             onUpdate();
-        } catch (e) { alert("Hata"); }
+        } catch (error) {
+            toast.error("Silme işlemi başarısız.");
+        }
     };
 
     if (!isOpen || !book) return null;
 
-    const totalPages = Math.ceil(allCopies.length / pageSize);
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
@@ -144,108 +159,167 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                 <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50 rounded-t-lg">
                     <div>
                         <h3 className="font-serif font-bold text-amber-950">Kopyaları Yönet</h3>
-                        <p className="text-xs text-stone-500">{book.title} ({allCopies.length} Adet)</p>
+                        <p className="text-xs text-stone-500">{book.title} (Toplam: {totalCount})</p>
                     </div>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold">✕</button>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold px-2">✕</button>
                 </div>
 
                 {/* Content Table */}
-                <div className="p-0 overflow-y-auto flex-1">
+                <div className="p-0 overflow-y-auto flex-1 relative">
+                    {loading && (
+                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                            <span className="text-amber-800 font-bold">Yükleniyor...</span>
+                        </div>
+                    )}
+
                     <table className="w-full text-sm text-left">
                         <thead className="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
-                            <th onClick={() => handleSort('barcodeNumber')} className="px-6 py-3 cursor-pointer hover:bg-stone-100 select-none">
-                                Barkod {sortField === 'barcodeNumber' && (sortOrder === 'asc' ? '↑' : '↓')}
-                            </th>
-                            <th onClick={() => handleSort('roomCode')} className="px-6 py-3 cursor-pointer hover:bg-stone-100 select-none">
-                                Oda {sortField === 'roomCode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                            </th>
-                            <th onClick={() => handleSort('shelfCode')} className="px-6 py-3 cursor-pointer hover:bg-stone-100 select-none">
-                                Raf {sortField === 'shelfCode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                            </th>
+                            <th className="px-6 py-3">Barkod</th>
+                            <th className="px-6 py-3">Oda</th>
+                            <th className="px-6 py-3">Raf</th>
                             <th className="px-6 py-3">Durum</th>
                             <th className="px-6 py-3 text-right">İşlemler</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100">
-                        {/* useMemo ile hesaplanan visibleCopies'i kullanıyoruz */}
-                        {visibleCopies.map((copy) => {
+                        {copies.map((copy) => {
                             const isEditing = editingId === copy.id;
                             return (
                                 <tr key={copy.id} className="hover:bg-amber-50/20">
-                                    <td className="px-6 py-4 font-mono text-stone-600">{copy.barcodeNumber}</td>
 
-                                    {/* --- DÜZENLEME ALANLARI --- */}
+                                    {/* 1. Barkod (Sabit) */}
+                                    <td className="px-6 py-4 font-mono text-stone-600 font-medium">
+                                        {copy.barcodeNumber}
+                                    </td>
+
+                                    {/* 2. Oda (Düzenlenebilir) */}
                                     <td className="px-6 py-4">
                                         {isEditing ? (
                                             <select
-                                                className="border border-amber-300 rounded p-1 text-xs w-full"
+                                                className="border border-amber-300 rounded p-1 text-xs text-black w-full outline-none focus:ring-1 focus:ring-amber-500"
                                                 value={editForm.roomId}
-                                                onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value) })}
+                                                onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value), shelfId: 0 })}
                                             >
-                                                {rooms.map(r => <option key={r.id} value={r.id}>{r.roomCode || r.description}</option>)}
+                                                <option value={0}>Seçiniz</option>
+                                                {rooms.map(r => (
+                                                    <option key={r.id} value={r.id}>
+                                                        {r.roomCode} ({r.description})
+                                                    </option>
+                                                ))}
                                             </select>
                                         ) : (
-                                            <span className="text-stone-800">{copy.shelf?.room?.roomCode}</span>
+                                            <span className="text-stone-800">
+                                                {copy.shelf?.room?.roomCode} <span className="text-stone-400 text-[10px]">({copy.shelf?.room?.description})</span>
+                                            </span>
                                         )}
                                     </td>
 
+                                    {/* 3. Raf (Düzenlenebilir - Odaya Bağlı) */}
                                     <td className="px-6 py-4">
                                         {isEditing ? (
-                                            <input type="text" className="border w-24 p-1 text-xs" value={editForm.shelfCode} onChange={e => setEditForm({...editForm, shelfCode: e.target.value})} />
+                                            <select
+                                                className="border border-amber-300 rounded p-1 text-xs text-black w-24 outline-none focus:ring-1 focus:ring-amber-500"
+                                                value={editForm.shelfId}
+                                                onChange={(e) => setEditForm({ ...editForm, shelfId: Number(e.target.value) })}
+                                                disabled={editForm.roomId === 0}
+                                            >
+                                                <option value={0}>Raf Seç</option>
+                                                {availableShelves.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.shelfCode}</option>
+                                                ))}
+                                            </select>
                                         ) : (
-                                            <span className="font-bold text-stone-700">{copy.shelf?.shelfCode}</span>
+                                            <span className="font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded text-xs">
+                                                {copy.shelf?.shelfCode}
+                                            </span>
                                         )}
                                     </td>
 
+                                    {/* 4. Durum */}
                                     <td className="px-6 py-4">
                                         {copy.isAvailable
-                                            ? <span className="text-green-600 bg-green-50 px-2 py-1 rounded text-xs">Müsait</span>
-                                            : <span className="text-red-600 bg-red-50 px-2 py-1 rounded text-xs">Ödünçte</span>
+                                            ? <span className="text-green-700 bg-green-50 px-2 py-1 rounded-full text-xs border border-green-200 font-bold">Müsait</span>
+                                            : <span className="text-red-700 bg-red-50 px-2 py-1 rounded-full text-xs border border-red-200 font-bold">Ödünçte</span>
                                         }
                                     </td>
 
-                                    {/* Butonlar */}
+                                    {/* 5. İşlemler */}
                                     <td className="px-6 py-4 text-right">
                                         {isEditing ? (
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={() => handleSave(copy.id)} className="text-green-600 text-xs font-bold">Kaydet</button>
-                                                <button onClick={() => setEditingId(null)} className="text-stone-400 text-xs">İptal</button>
+                                                <button
+                                                    onClick={() => handleSave(copy.id)}
+                                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                >
+                                                    Kaydet
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded text-xs transition-colors"
+                                                >
+                                                    İptal
+                                                </button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={() => { setEditingId(copy.id); setEditForm({ roomId: copy.shelf.roomId, shelfCode: copy.shelf.shelfCode }) }} className="text-amber-700 text-xs">Düzenle</button>
-                                                <button onClick={() => handleDelete(copy.id)} className="text-red-400 text-xs">Sil</button>
+                                                <button
+                                                    onClick={() => handleEditClick(copy)}
+                                                    className="text-amber-700 hover:text-amber-900 text-xs font-medium hover:underline"
+                                                >
+                                                    Düzenle
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(copy.id)}
+                                                    className="text-red-600 hover:text-red-800 text-xs font-medium hover:underline"
+                                                >
+                                                    Sil
+                                                </button>
                                             </div>
                                         )}
                                     </td>
                                 </tr>
                             );
                         })}
+
+                        {copies.length === 0 && !loading && (
+                            <tr>
+                                <td colSpan={5} className="text-center py-8 text-stone-500">
+                                    Bu kitaba ait kayıtlı kopya bulunamadı.
+                                </td>
+                            </tr>
+                        )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Client-Side Pagination Controls */}
+                {/* Footer / Pagination */}
                 <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-lg flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <button
-                            disabled={page === 1}
+                            disabled={page === 1 || loading}
                             onClick={() => setPage(p => Math.max(1, p - 1))}
-                            className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100"
+                            className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100 text-stone-700 transition-colors"
                         >
                             ← Önceki
                         </button>
-                        <span className="text-xs text-stone-600 font-medium">Sayfa {page} / {totalPages || 1}</span>
+                        <span className="text-xs text-stone-600 font-medium bg-white px-3 py-1 border rounded shadow-sm">
+                            Sayfa {page} / {totalPages || 1}
+                        </span>
                         <button
-                            disabled={page >= totalPages}
+                            disabled={page >= totalPages || loading}
                             onClick={() => setPage(p => p + 1)}
-                            className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100"
+                            className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100 text-stone-700 transition-colors"
                         >
                             Sonraki →
                         </button>
                     </div>
-                    <button onClick={onClose} className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-sm font-medium">Kapat</button>
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-sm font-bold transition-colors"
+                    >
+                        Kapat
+                    </button>
                 </div>
             </div>
         </div>
