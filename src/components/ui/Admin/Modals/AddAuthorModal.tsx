@@ -32,8 +32,8 @@ export default function AddAuthorModal({ isOpen, onClose, onSuccess }: Props) {
             setForm({ firstName: '', lastName: '' });
             onSuccess(); // Listeyi yenile
             onClose();   // Modalı kapat
-        } catch (error) {
-            toast.error("Yazar eklenirken hata oluştu.", { id: toastId });
+        } catch (error:any) {
+            toast.error(error.response.data, { id: toastId });
         } finally {
             setLoading(false);
         }

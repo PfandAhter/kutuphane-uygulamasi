@@ -31,7 +31,7 @@ export default function AddCategoryModal({ isOpen, onClose, onSuccess }: Props) 
             onClose();
         } catch (error: any) {
             console.error("Kategori eklenemedi", error.response.data);
-            toast.error(error.message, { id: toastId });
+            toast.error(error.response.data, { id: toastId });
         } finally {
             setLoading(false);
         }

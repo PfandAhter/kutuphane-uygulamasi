@@ -47,20 +47,7 @@ export const authService = {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-
-            let errorMessage = "Kayıt işlemi başarısız.";
-
-            if (errorData.errors) {
-                const validationErrors = Object.values(errorData.errors).flat();
-                errorMessage = validationErrors.join(', ');
-            }
-            else if (errorData.message) {
-                errorMessage = errorData.message;
-            }
-            else if (errorData.error) {
-                errorMessage = errorData.error;
-            }
-            throw new Error(errorMessage);
+            throw new Error(errorData.message);
         }
     }
 };

@@ -35,10 +35,10 @@ export default function UpdateAuthorModal({ isOpen, onClose, onSuccess, author }
         try {
             await authorService.updateAuthor(form);
             toast.success("Yazar başarıyla güncellendi!", { id: toastId });
-            onSuccess(); // Listeyi yenile
+            onSuccess()
             onClose();
-        } catch (error) {
-            toast.error("Güncelleme başarısız.", { id: toastId });
+        } catch (error:any) {
+            toast.error(error.response.data, { id: toastId });
         } finally {
             setLoading(false);
         }
