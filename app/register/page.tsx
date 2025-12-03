@@ -55,13 +55,18 @@ export default function RegisterPage() {
             setTimeout(() =>{
                 router.push('/login');
             },1000);
-        } catch (err: any) {
-            const msg = err.message;
-            toast.error(msg, {
-                id: toastId,
-                duration: 5000
-            });
-            setError(msg);
+        } catch (error: any) {
+            console.error("Kayit Basarisiz: ", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

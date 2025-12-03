@@ -35,3 +35,29 @@ export interface UserFineDto{
 
     loanDetails?: LoanInfo;
 }
+
+export interface MyLoanDto {
+    id: number;
+    bookTitle: string;
+    authorName: string;
+    borrowDate: string;
+    dueDate: string;
+    returnDate?: string | null;
+    isOverdue: boolean;
+    daysLeft: number;
+}
+
+export interface MyFineDto {
+    id: number;
+    amount: number;
+    reason: string;
+    issuedDate: string;
+    isPaid: boolean;
+    paymentDate?: string | null;
+}
+
+export interface UserStats {
+    activeLoanCount: number;
+    totalReadCount: number;
+    totalFineDebt: number;
+}

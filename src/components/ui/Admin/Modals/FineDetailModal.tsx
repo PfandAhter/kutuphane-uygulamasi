@@ -21,7 +21,6 @@ export default function FineDetailModal({ isOpen, onClose, fine }: Props) {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md border border-stone-200 overflow-hidden" onClick={e => e.stopPropagation()}>
 
-                {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50">
                     <h3 className="font-serif font-bold text-amber-950 flex items-center gap-2">
                         <span className="text-xl">📋</span> Ceza Detayı #{fine.fineId}
@@ -29,21 +28,8 @@ export default function FineDetailModal({ isOpen, onClose, fine }: Props) {
                     <button onClick={onClose} className="text-stone-400 hover:text-stone-600 transition-colors">✕</button>
                 </div>
 
-                {/* Content */}
                 <div className="p-6 space-y-5">
 
-                    {/* Kullanıcı Bilgisi
-                    <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-                        <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center font-bold text-stone-600 uppercase">
-                            {fine.userFirstName?.charAt(0) || 'U'}
-                        </div>
-                        <div>
-                            <div className="font-bold text-stone-800">{fine.userFirstName} {fine.userLastName}</div>
-                            <div className="text-xs text-stone-500">Üye ID: <span className="font-mono bg-stone-100 px-1 rounded">{fine.userId.substring(0,8)}...</span></div>
-                        </div>
-                    </div>*/}
-
-                    {/* Temel Bilgiler Grid */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Ceza Tipi</label>

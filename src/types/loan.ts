@@ -11,6 +11,19 @@ export interface LoanInfo{
     barcodeNumber: string;
 }
 
+export interface LoanDto {
+    loanId: number;
+    loanDate: string;
+    expectedReturnDate: string;
+    actualReturnDate?: string | null;
+    isActive: boolean;
+    bookTitle: string;
+    authorName: string;
+    isbn: string;
+    room: string;
+    shelf: string;
+}
+
 export interface LoanWithUserDetailsDto {
     loanId: number;
     loanDate: string;

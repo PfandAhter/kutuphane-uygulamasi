@@ -1,5 +1,5 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import {UserFilterDto, UserViewDto} from "@/src/types/user";
+import {UserFilterDto, UserStats, UserViewDto} from "@/src/types/user";
 import {PaginatedResult} from "@/src/types/book";
 import {UserProfile} from "@/src/types/auth";
 
@@ -37,5 +37,10 @@ export const userService = {
             baseURL: ''
         });
         return response.data;
-    }
+    },
+
+    getStats: async (): Promise<UserStats> => {
+        const response = await axiosInstance.get(`${API_ROUTE_BASE}/stats`);
+        return response.data;
+    },
 }
