@@ -1,5 +1,5 @@
 import axiosInstance from "@/src/utils/axiosInstance";
-import {Author, CreateAuthorDto } from "@/src/types/publisherAndAuthor";
+import {Author, CreateAuthorDto, UpdateAuthorDto} from "@/src/types/publisherAndAuthor";
 import {PaginatedResult} from "@/src/types/book";
 
 const API_ROUTE_BASE = "/api/author";
@@ -44,6 +44,11 @@ export const authorService = {
             baseURL: ''
         });
         return response.data;
+    },
+
+    updateAuthor: async (dto: UpdateAuthorDto): Promise<void> =>{
+        await axiosInstance.put(`${API_ROUTE_BASE}/update?id=${dto.id}`, dto, {baseURL: ''});
+
     },
 
     deleteAuthor: async (id: number): Promise<boolean> => {
