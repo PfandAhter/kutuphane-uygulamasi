@@ -256,8 +256,12 @@ export default function AddBookPage() {
 
             await new Promise(r => setTimeout(r, 1000));
             router.push('/admin/books');
-        } catch (error) {
-            toast.error("Kayıt sırasında hata oluştu.", { id: toastId });
+        } catch (error: any) {
+            if(error.response.data){
+                toast.error(error.response.data, { id: toastId });
+            }else{
+                toast.error("Kitap eklenirken bir hata oluştu.", { id: toastId });
+            }
         } finally {
             setSubmitting(false);
         }

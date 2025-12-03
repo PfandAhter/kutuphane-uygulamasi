@@ -37,9 +37,9 @@ export default function GenericDeleteModal({
             toast.success(`${entityType} başarıyla silindi.`, { id: toastId });
             onSuccess(); // Listeyi yenile
             onClose();   // Modalı kapat
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error(`Silme işlemi başarısız. (${entityType} ilişkili veriler olabilir)`, { id: toastId });
+            toast.error(error.response.data, { id: toastId });
         } finally {
             setLoading(false);
         }

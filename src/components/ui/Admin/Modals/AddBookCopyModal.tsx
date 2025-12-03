@@ -127,9 +127,13 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
             setShelfId("");
             onClose();
 
-        } catch (error) {
-            console.error("Hata:", error);
-            toast.error("Kopya eklenirken bir hata oluştu.");
+        } catch (error:any) {
+            console.error("Kitap eklerken hata:", error);
+            if(error.response.data){
+                toast.error(error.response.data);
+            }else{
+                toast.error("Kopya Eklerken bir hata oluştu.");
+            }
         } finally {
             setLoading(false);
         }

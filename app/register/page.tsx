@@ -56,7 +56,7 @@ export default function RegisterPage() {
                 router.push('/login');
             },1000);
         } catch (err: any) {
-            const msg = err.message || 'Kayıt sırasında beklenmedik bir hata oluştu.';
+            const msg = err.message;
             toast.error(msg, {
                 id: toastId,
                 duration: 5000
