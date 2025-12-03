@@ -24,17 +24,8 @@ export default function UpdateRoomModal({ isOpen, onClose, room, onSubmit }: Pro
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
-        const toastId = toast.loading('Oda güncelleniyor...');
-        try{
-            await onSubmit(room.id, form);
-
-            toast.success('Oda başarıyla güncellendi!', { id: toastId });
-        }catch(err){
-            toast.error('Güncelleme sırasında bir hata oluştu.', { id: toastId });
-        }finally {
-            setLoading(false);
-        }
+        await onSubmit(room.id, form);
+        setLoading(false);
     };
 
     return (
