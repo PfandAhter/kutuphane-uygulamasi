@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response.data, { status: 200 });
 
     } catch (err: any) {
-        console.error("Proxy Login Error:", err.message);
+        console.error("Proxy Login Error:", err.response.data);
 
         if (err.response) {
-            return NextResponse.json(err.response.data, { status: err.response.status });
+            return NextResponse.json(err.response.data || "E-posta adresi veya parola hatalı. Lütfen bilgilerinizi kontrol edin.", { status: err.response.status });
         }
 
         return NextResponse.json(
