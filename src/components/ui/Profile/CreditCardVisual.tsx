@@ -25,10 +25,9 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
     const isFlipped = focusedField === 'cvc';
 
     return (
-        <div className="w-full max-w-[360px] h-[220px] mx-auto mb-6 perspective-[1000px] select-none">
+        <div className="w-full max-w-[360px] h-[220px] mx-auto mb-6 perspective-[1000px] select-none group">
             <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl p-6 text-white backface-hidden flex flex-col justify-between border border-stone-700 z-10">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl p-6 text-white backface-hidden z-20 flex flex-col justify-between border border-stone-700">
                     <div className="flex justify-between items-start">
                         <div className="w-12 h-9 bg-gradient-to-tr from-yellow-400 to-yellow-200 rounded-md border border-yellow-600 shadow-sm opacity-90 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 skew-y-12 origin-top-left"></div>
@@ -37,18 +36,19 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
                     </div>
 
                     <div className="space-y-6">
-                        <div className={`font-mono text-xl tracking-widest transition-all p-1 -m-1 rounded ${focusedField === 'number' ? 'border border-amber-500/50 bg-amber-500/10' : ''}`}>
+                        <div className="font-mono text-xl tracking-widest transition-all p-1 -m-1">
                             {formatCardNumberPlaceholder(cardNumber)}
                         </div>
 
                         <div className="flex justify-between items-end">
-                            <div className={`flex flex-col p-1 -m-1 rounded transition-all ${focusedField === 'name' ? 'border border-amber-500/50 bg-amber-500/10' : ''}`}>
+                            <div className="flex flex-col p-1 -m-1 transition-all">
                                 <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider">Kart Sahibi</span>
                                 <span className="font-medium uppercase tracking-wide text-sm truncate max-w-[180px]">
                                     {cardName || 'AD SOYAD'}
                                 </span>
                             </div>
-                            <div className={`flex flex-col p-1 -m-1 rounded transition-all ${focusedField === 'expiry' ? 'border border-amber-500/50 bg-amber-500/10' : ''}`}>
+
+                            <div className="flex flex-col p-1 -m-1 transition-all">
                                 <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider">SKT</span>
                                 <span className="font-mono font-medium tracking-wider text-sm">
                                     {expiry || 'MM/YY'}
@@ -69,7 +69,7 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
 
                         <div className="flex flex-col items-end shrink-0">
                             <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider mr-1 mb-0.5">CVV / CVC</span>
-                            <div className={`w-16 h-10 bg-white text-stone-900 font-mono text-center p-2 rounded-sm font-bold flex justify-center items-center transition-all ${focusedField === 'cvc' ? 'border-2 border-amber-500 ring-2 ring-amber-500/30' : 'border border-stone-300'}`}>
+                            <div className="w-16 h-10 bg-white text-stone-900 font-mono text-center p-2 rounded-sm font-bold flex justify-center items-center border border-stone-300">
                                 <span className="tracking-widest text-lg leading-none">{cvc || '***'}</span>
                             </div>
                         </div>
@@ -79,6 +79,7 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
                         <span className="text-3xl">🏦</span>
                     </div>
                 </div>
+
             </div>
         </div>
     );
