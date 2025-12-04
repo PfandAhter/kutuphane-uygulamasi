@@ -71,11 +71,6 @@ function ProfileContent() {
     const fetchFinesData = async () => {
         setFinesLoading(true);
         try {
-            // Aktif veya Geçmiş Cezalar İçin Servis Seçimi
-            // Eğer ikisi farklı endpoint ise if-else ile ayırabilirsin
-            // Tek endpoint ise parametre göndererek ayrıştırabilirsin (örn: isPaid)
-
-            // Örnek: Aktif Cezalar
             if (activeTab === TABS.ACTIVE_FINES) {
                 const result = await fineService.getMyActiveFines(page, pageSize);
                 if (result && result.items) {
@@ -86,12 +81,16 @@ function ProfileContent() {
                     setTotalCount(0);
                 }
             }
-            // Örnek: Geçmiş Cezalar (Serviste getMyPastFines gibi bir metodun varsa)
             else if (activeTab === TABS.PAST_FINES) {
-                // Şimdilik aynı servisi çağırıyorum, burayı kendi metoduna göre güncelle
-                // const result = await fineService.getMyPastFines(page, pageSize);
-                setFines([]); // Geçici boş
-                setTotalCount(0);
+                const result = await fineService.getMyHistoryFines(page, pageSize);
+
+                if (result && result.items) {
+                    setFines(result.items);
+                    setTotalCount(result.totalCount || 0);
+                } else {
+                    setFines([]);
+                    setTotalCount(0);
+                }
             }
 
         } catch (error) {
@@ -102,7 +101,6 @@ function ProfileContent() {
         }
     };
 
-    // --- ÖDEME İŞLEMLERİ ---
     const handlePayClick = (fine: UserFineDto) => {
         setSelectedFine(fine);
         setIsPaymentModalOpen(true);
@@ -143,16 +141,13 @@ function ProfileContent() {
             <main className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-                    {/* SOL PANEL */}
                     <div className="lg:col-span-1">
                         <ProfileSidebar user={user} stats={stats} />
                     </div>
 
-                    {/* SAĞ PANEL */}
                     <div className="lg:col-span-3">
                         <div className="bg-white border border-stone-200 rounded-xl shadow-sm min-h-[600px] flex flex-col">
 
-                            {/* Sekmeler */}
                             <div className="flex border-b border-stone-200 overflow-x-auto shrink-0">
                                 <button onClick={() => setActiveTab(TABS.ACTIVE_LOANS)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.ACTIVE_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>📖 Aktif Ödünçler</button>
                                 <button onClick={() => setActiveTab(TABS.PAST_LOANS)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>✅ Geçmiş Ödünçler</button>
@@ -160,7 +155,6 @@ function ProfileContent() {
                                 <button onClick={() => setActiveTab(TABS.PAST_FINES)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_FINES ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>📜 Ceza Geçmişi</button>
                             </div>
 
-                            {/* İçerik Alanı */}
                             <div className="flex-1 p-4">
                                 {activeTab === TABS.ACTIVE_LOANS && (
                                     <ActiveLoans page={page} pageSize={pageSize} onDataLoaded={setTotalCount} />
@@ -169,7 +163,6 @@ function ProfileContent() {
                                     <PastLoans page={page} pageSize={pageSize} onDataLoaded={setTotalCount} />
                                 )}
 
-                                {/* Cezalar Kısmı */}
                                 {(activeTab === TABS.ACTIVE_FINES || activeTab === TABS.PAST_FINES) && (
                                     <FineListTable
                                         fines={fines}
@@ -180,7 +173,6 @@ function ProfileContent() {
                                 )}
                             </div>
 
-                            {/* Pagination */}
                             {totalCount > 0 && (
                                 <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-xl mt-auto shrink-0">
                                     <PaginationControls
@@ -208,7 +200,6 @@ function ProfileContent() {
     );
 }
 
-// --- ANA SAYFA COMPONENTİ (SUSPENSE WRAPPER) ---
 export default function ProfilePage() {
     return (
         <Suspense fallback={
