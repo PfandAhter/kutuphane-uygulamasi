@@ -70,13 +70,9 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
             toast.error("Lütfen kart bilgilerini eksiksiz giriniz.");
             return;
         }
-
         setSimulatingPayment(true);
-        const toastId = toast.loading("Ödeme işlemi yapılıyor, bankaya bağlanılıyor...");
 
         await new Promise(resolve => setTimeout(resolve, 3500));
-
-        toast.success("Ödeme onaylandı!", { id: toastId });
         onConfirm();
         setSimulatingPayment(false);
     };
