@@ -30,13 +30,10 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
 
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl p-6 text-white backface-hidden flex flex-col justify-between border border-stone-700 z-10">
                     <div className="flex justify-between items-start">
-                        <div className="w-12 h-9 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-md border border-yellow-600 opacity-80 flex items-center justify-center overflow-hidden">
-                            <div className="w-full h-[1px] bg-yellow-700 absolute top-1/3"></div>
-                            <div className="w-full h-[1px] bg-yellow-700 absolute bottom-1/3"></div>
-                            <div className="h-full w-[1px] bg-yellow-700 absolute left-1/3"></div>
-                            <div className="h-full w-[1px] bg-yellow-700 absolute right-1/3"></div>
+                        <div className="w-12 h-9 bg-gradient-to-tr from-yellow-400 to-yellow-200 rounded-md border border-yellow-600 shadow-sm opacity-90 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 skew-y-12 origin-top-left"></div>
                         </div>
-                        <span className="font-serif italic text-lg opacity-70">KütüphaneKart</span>
+                        <span className="font-serif italic text-lg opacity-70 text-stone-300">KütüphaneKart</span>
                     </div>
 
                     <div className="space-y-6">
@@ -61,18 +58,25 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
                     </div>
                 </div>
 
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl rotate-y-180 backface-hidden overflow-hidden border border-stone-700">
-                    <div className="w-full h-12 bg-black mt-6 opacity-80"></div>
-                    <div className="p-6 mt-2">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider mr-1">CVV</span>
-                            <div className={`w-full bg-white text-stone-900 font-mono text-right p-2 rounded font-bold flex justify-end items-center h-10 ${focusedField === 'cvc' ? 'border-2 border-amber-500' : ''}`}>
-                                <span className="tracking-widest text-lg">{cvc || '***'}</span>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-700 to-stone-800 rounded-xl shadow-xl rotate-y-180 backface-hidden overflow-hidden border border-stone-600">
+                    <div className="w-full h-12 bg-stone-950 mt-6 opacity-90"></div>
+
+                    <div className="px-6 mt-4 flex items-center justify-between gap-4">
+                        <div className="flex-1 h-10 bg-stone-300/80 rounded-sm flex items-center px-3 relative overflow-hidden">
+                            <span className="text-[10px] text-stone-500 font-serif italic opacity-70 z-10">İmza Paneli</span>
+                            <div className="absolute inset-0 bg-stone-400/20" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)' }}></div>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0">
+                            <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider mr-1 mb-0.5">CVV / CVC</span>
+                            <div className={`w-16 h-10 bg-white text-stone-900 font-mono text-center p-2 rounded-sm font-bold flex justify-center items-center transition-all ${focusedField === 'cvc' ? 'border-2 border-amber-500 ring-2 ring-amber-500/30' : 'border border-stone-300'}`}>
+                                <span className="tracking-widest text-lg leading-none">{cvc || '***'}</span>
                             </div>
                         </div>
-                        <div className="mt-6 flex justify-center opacity-50">
-                            <span className="text-3xl">🏦</span>
-                        </div>
+                    </div>
+
+                    <div className="mt-6 pr-6 flex justify-end opacity-30 grayscale">
+                        <span className="text-3xl">🏦</span>
                     </div>
                 </div>
             </div>

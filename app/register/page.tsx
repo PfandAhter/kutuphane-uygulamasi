@@ -40,12 +40,14 @@ export default function RegisterPage() {
         setError('');
 
         // 1. Parola Kontrolü (Submit öncesi güvenlik)
+
+        const toastId = toast.loading("Kayıt işlemi başlatılıyor.")
+
         if (!isPasswordValid) {
-            toast.error("Lütfen parola gereksinimlerini karşılayınız.");
+            toast.error("Lütfen parola gereksinimlerini karşılayınız.", { id: toastId });
             return;
         }
 
-        const toastId = toast.loading("Kayıt işlemi başlatılıyor.")
         setLoading(true);
 
         try {

@@ -44,10 +44,11 @@ export const authService = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dto),
         });
-
+        console.log("Register response status:", response);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message);
+            const errorMessage = errorData.message || errorData.error || "Kayıt başarısız.";
+            throw new Error(errorMessage);
         }
     }
 };

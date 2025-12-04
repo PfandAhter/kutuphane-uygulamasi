@@ -28,7 +28,7 @@ export default function LoginPage() {
                 router.push('/');
             },1500);
         } catch (err: any) {
-            toast.error(err.message);
+            toast.error(err.message, { id: toastId });
             setError(err.message);
         } finally {
             setLoading(false);
