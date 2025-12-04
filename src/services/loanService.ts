@@ -33,7 +33,9 @@ export const loanService = {
     },
 
     returnBook: async (barcode: string): Promise<ReturnLoanResponseDto> => {
-        const response = await axiosInstance.post(`${API_ROUTE_BASE}/return`, { barcode });
+        const response = await axiosInstance.post(`${API_ROUTE_BASE}/return`, { barcode },{
+            baseURL: '',
+        });
         return response.data;
     },
 
