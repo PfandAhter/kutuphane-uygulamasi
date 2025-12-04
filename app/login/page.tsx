@@ -27,9 +27,17 @@ export default function LoginPage() {
             setTimeout(() =>{
                 router.push('/');
             },1500);
-        } catch (err: any) {
-            toast.error(err.message, { id: toastId });
-            setError(err.message);
+        } catch (error: any) {
+            console.error("Giriş İşlemi Başarısız: ", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }
