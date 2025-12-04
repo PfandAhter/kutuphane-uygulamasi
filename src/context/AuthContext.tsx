@@ -5,6 +5,7 @@ import { AuthContextType } from "@/src/types/authContextType";
 import { AuthResponse, LoginDto, RegisterDto, UserProfile } from "@/src/types/auth";
 import { authService } from "@/src/services/authService";
 import { userService } from "@/src/services/userService";
+import toast from "react-hot-toast";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setRefreshToken(response.refreshToken);
             setToken(response.token);
             setUser(userProfileDetails);
-        } catch (error) {
+        } catch (error:any) {
             console.error("Login error:", error);
             // Hata durumunda yarım kalmış verileri temizle
             localStorage.removeItem("token");

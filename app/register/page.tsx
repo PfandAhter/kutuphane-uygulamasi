@@ -20,26 +20,37 @@ export default function RegisterPage() {
 
     // --- PAROLA KONTROL MANTIĞI ---
     const password = formData.password;
-    const hasUpperCase = /[A-Z]/.test(password); // Büyük harf kontrolü
-    const hasNumber = /[0-9]/.test(password);    // Sayı kontrolü
-    // Özel karakter kontrolü (Noktalama işaretleri ve semboller)
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    // Tüm şartlar sağlanıyor mu?
     const isPasswordValid = hasUpperCase && hasNumber && hasSpecialChar;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // --- TELEFON NUMARASI KONTROLÜ ---
+        if (name === 'phoneNumber') {
+            // Regex: Sadece rakamlara izin ver (boş string silme işlemi için kabul edilir)
+            if (value === '' || /^\d+$/.test(value)) {
+                setFormData({
+                    ...formData,
+                    [name]: value
+                });
+            }
+            return; // İşlemi burada kes, aşağıya devam etmesin
+        }
+
+        // Diğer alanlar için standart güncelleme
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        // 1. Parola Kontrolü (Submit öncesi güvenlik)
 
         const toastId = toast.loading("Kayıt işlemi başlatılıyor.")
 
@@ -58,7 +69,7 @@ export default function RegisterPage() {
                 router.push('/login');
             },1000);
         } catch (error: any) {
-            console.error("Kayit Basarisiz: ", error.response.data);
+            console.error("Kayit Basarisiz: ", error.response?.data);
             const errorMessage = error.response?.data?.message ||
                 error.response?.data?.error ||
                 (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
@@ -124,9 +135,11 @@ export default function RegisterPage() {
                         <input
                             name="phoneNumber"
                             type="tel"
+                            inputMode="numeric" // Mobil klavyeyi sayısal açar
                             value={formData.phoneNumber}
                             onChange={handleChange}
                             placeholder="5xx xxx xx xx"
+                            maxLength={11} // İsteğe bağlı: Maksimum uzunluk (örn: 05xxxxxxxxx)
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
                         />
@@ -196,7 +209,7 @@ export default function RegisterPage() {
 
                     <button
                         type="submit"
-                        disabled={loading} // isPasswordValid false ise butonu disable etmek istersen: disabled={loading || !isPasswordValid}
+                        disabled={loading}
                         className="w-full inline-flex justify-center items-center rounded-md bg-[#7a4c24] px-4 py-2 text-sm font-semibold text-[#fdf3e6] hover:bg-[#5f391b] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >
                         {loading ? "Kayıt yapılıyor..." : "Üye Ol"}

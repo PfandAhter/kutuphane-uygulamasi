@@ -24,9 +24,9 @@ export default function LoginPage() {
 
             toast.success("Giriş işlemi başarılıdır. Yönlendiriliyorsunuz...", { id : toastId});
 
-            setTimeout(() =>{
+            /*setTimeout(() =>{
                 router.push('/');
-            },1500);
+            },1500);*/
         } catch (error: any) {
             console.error("Giriş İşlemi Başarısız: ", error.response.data);
             const errorMessage = error.response?.data?.message ||
