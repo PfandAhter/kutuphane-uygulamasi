@@ -32,6 +32,7 @@ export default function UpdateCategoryModal({ isOpen, onClose, category, onSucce
             onSuccess();
             onClose();
         } catch (error:any) {
+            console.error("Kategori güncellenemedi", error.response.data);
             const errorMessage = error.response?.data?.message ||
                 error.response?.data?.error ||
                 (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
