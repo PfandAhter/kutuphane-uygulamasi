@@ -1,30 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
+import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
 
-const API_BASE_URL = process.env.BACKEND_PUBLIC_API_BASE_URL;
+const API_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 export async function POST(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const fineId = searchParams.get('fineId');
+        if (!fineId) {
+            return NextResponse.json(
+                { message: "Ceza ID'si (fineId) zorunludur." },
+                { status: 400 }
+            );
+        }
         const authHeader = request.headers.get("Authorization");
-        const body = await request.json();
-
-        console.log("Proxy POST /api/Fines/pay called");
-        await axios.post(`${API_BASE_URL}/api/Fines/pay`, body, {
-            headers: {
-                "Content-Type": "application/json",
-                ...(authHeader && { "Authorization": authHeader })
+        console.log(`Proxy POST /api/fines/pay called for FineID: ${fineId}`);
+        const response = await axios.post(
+            `${API_BACKEND_URL}/api/Fines/pay?fineId=${fineId}`,
+            {},
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(authHeader && { "Authorization": authHeader })
+                }
             }
-        });
-
-        console.log("Proxy POST /api/Fines/pay called successfully");
-        return NextResponse.json({ success: true }, { status: 200 });
+        );
+        console.log("Proxy POST /api/fines/pay succeeded");
+        return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
-        console.error("Proxy Fine Pay Error:", err?.message);
-        if (err.response){
-            return NextResponse.json(err.response.data || { error: "Fine Pay işlemi başarısız." }, { status: err.response.status });
+        console.error("Proxy POST /api/fines/pay error: ", err?.message);
+        if (err.response) {
+            return NextResponse.json(err.response.data, { status: err.response.status });
         }
         return NextResponse.json(
-            { message: "Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin." },
+            { message: "Ödeme işlemi sırasında sunucuyla iletişim kurulamadı." },
             { status: 500 }
         );
     }

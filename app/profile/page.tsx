@@ -111,17 +111,26 @@ function ProfileContent() {
     const handleConfirmPayment = async () => {
         if (!selectedFine) return;
         setPaymentLoading(true);
+        const toastId = toast.loading("Ödeme işlemi yapılıyor...");
         try {
             await fineService.payFine(selectedFine.fineId.toString());
-            toast.success("Ödeme başarıyla alındı.");
+            toast.success("Ödeme başarıyla alındı." , { id: toastId });
             setIsPaymentModalOpen(false);
             setSelectedFine(null);
 
-            // Verileri tazele
             fetchFinesData();
             fetchStats();
-        } catch (error) {
-            toast.error("Ödeme işlemi başarısız.");
+        } catch (error:any) {
+            console.error("Ödeme işlemi başarısız.");
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setPaymentLoading(false);
         }

@@ -55,8 +55,8 @@ export const fineService = {
         return response.data;
     },
 
-    payFine: async (userId: string): Promise<void> => { //TODO: Burada kullanici kendi yapacagi icin admin yetkisi gerekmeyecek.
-        await axiosInstance.post(`${API_ROUTE_BASE}/pay`, { userId }, {
+    payFine: async (fineId: string): Promise<void> => {
+        await axiosInstance.post(`${API_ROUTE_BASE}/pay?fineId=${fineId}`, {
             baseURL: ''
         });
     }
