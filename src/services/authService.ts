@@ -1,4 +1,5 @@
 import { LoginDto, RegisterDto, AuthResponse, RefreshTokenDto } from "@/src/types/auth";
+import axiosInstance from "@/src/utils/axiosInstance";
 
 const API_ROUTE_BASE = "/api/auth";
 
@@ -21,34 +22,16 @@ export const authService = {
     },
 
     async login(dto: LoginDto): Promise<AuthResponse> {
-        const response = await fetch(`${API_ROUTE_BASE}/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dto),
+        const response = await axiosInstance.post(`${API_ROUTE_BASE}/login`, dto ,{
+            baseURL: ''
         });
 
-        console.log("Login response status:", response.status);
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || errorData.error || "Giriş başarısız.";
-            throw new Error(errorMessage);
-        }
-        return response.json();
+        return response.data;
     },
 
     async register(dto: RegisterDto): Promise<void> {
-        const response = await fetch(`${API_ROUTE_BASE}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dto),
+        await axiosInstance.post(`${API_ROUTE_BASE}/register`, dto ,{
+            baseURL: ''
         });
-        console.log("Register response status:", response);
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || errorData.error || "Kayıt başarısız.";
-            throw new Error(errorMessage);
-        }
     }
 };
