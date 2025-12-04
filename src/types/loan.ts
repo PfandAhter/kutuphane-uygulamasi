@@ -42,3 +42,14 @@ export interface LoanWithUserDetailsDto {
     userEmail: string;
     userPhoneNumber: string;
 }
+
+export interface ReturnLoanResponseDto {
+    loanId: number;
+    bookTitle: string;
+    barcode: string;
+    memberFullName: string;
+    memberPhone: string;
+    returnStatus: string;
+    returnedDate: string;
+    message: string;
+}
