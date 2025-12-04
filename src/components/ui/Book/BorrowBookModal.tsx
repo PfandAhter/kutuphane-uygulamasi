@@ -14,7 +14,6 @@ interface Props {
 export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess }: Props) {
     const today = new Date().toISOString().split('T')[0];
 
-    // Varsayılan olarak 15 gün sonrası
     const defaultEnd = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const [inputBarcode, setInputBarcode] = useState('');
@@ -22,21 +21,32 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
     const [endDate, setEndDate] = useState(defaultEnd);
     const [loading, setLoading] = useState(false);
 
-    // Modal her açıldığında state'leri sıfırla
+    const [maxEndDate, setMaxEndDate] = useState('');
+
     useEffect(() => {
         if (isOpen) {
-            setInputBarcode(''); // Barkod her zaman boş başlar
+            setInputBarcode('');
             setStartDate(today);
             setEndDate(defaultEnd);
         }
     }, [isOpen, today, defaultEnd]);
 
+    useEffect(() => {
+        if (startDate) {
+            const start = new Date(startDate);
+            const maxDate = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
+            setMaxEndDate(maxDate.toISOString().split('T')[0]);
+
+            if (new Date(endDate) > maxDate) {
+                setEndDate(maxDate.toISOString().split('T')[0]);
+            }
+        }
+    }, [startDate, endDate]);
+
     if (!isOpen) return null;
 
-    // Sadece sayı girilmesini sağlayan fonksiyon
     const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
-        // Regex: Sadece rakamlar (veya boşluk - silme işlemi için)
         if (/^\d*$/.test(val)) {
             setInputBarcode(val);
         }
@@ -47,26 +57,26 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
         const toastId = toast.loading("Girişler kontrol ediliyor...");
 
         if (!inputBarcode.trim()) {
-            return toast.error("Lütfen barkod numarasını giriniz." , { id: toastId });
+            return toast.error("Lütfen barkod numarasını giriniz.", { id: toastId });
         }
 
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        // Tarih kontrolü
         if (end <= start) {
             return toast.error("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.", { id: toastId });
         }
 
-        // --- GÜN SAYISI HESAPLAMA ---
         const diffInMs = end.getTime() - start.getTime();
         const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
 
+        if (diffInDays > 20) {
+            return toast.error("Maksimum ödünç süresi 20 gündür.", { id: toastId });
+        }
         setLoading(true);
         toast.loading("Ödünç verme işlemi yapılıyor...", { id: toastId });
 
         try {
-            // Servise sadece barkod ve gün sayısı gidiyor
             await loanService.createLoan({
                 barcode: inputBarcode.trim(),
                 loanDays: diffInDays
@@ -76,6 +86,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
             onSuccess();
             onClose();
         } catch (error: any) {
+            console.error("Kitap ödünç verilemedi", error.response?.data);
             const errorMessage = error.response?.data?.message ||
                 error.response?.data?.error ||
                 (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
@@ -83,7 +94,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
             if (errorMessage) {
                 toast.error(errorMessage, { id: toastId });
             } else {
-                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+                toast.error("Sunucuya bağlanılamadı.", { id: toastId });
             }
         } finally {
             setLoading(false);
@@ -100,24 +111,20 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-
-                    {/* Barkod Giriş Alanı */}
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Barkod Numarası</label>
                         <input
                             type="text"
                             required
                             autoFocus
-                            inputMode="numeric" // Mobil klavyeyi sayısal açar
+                            inputMode="numeric"
                             value={inputBarcode}
                             onChange={handleBarcodeChange}
                             placeholder="Kitap barkodunu giriniz..."
                             className="w-full border border-stone-300 text-stone-800 rounded p-2.5 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all font-mono"
                         />
-                        <p className="text-[10px] text-stone-400 mt-1">Sadece rakam girebilirsiniz.</p>
                     </div>
 
-                    {/* Başlangıç Tarihi */}
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Başlangıç Tarihi</label>
                         <input
@@ -130,22 +137,26 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                         />
                     </div>
 
-                    {/* Bitiş Tarihi */}
                     <div>
-                        <label className="block text-xs font-bold text-stone-600 mb-1">Bitiş Tarihi (Tahmini İade)</label>
+                        <label className="block text-xs font-bold text-stone-600 mb-1">Bitiş Tarihi (Maks. 20 Gün)</label>
                         <input
                             type="date"
                             required
                             min={startDate}
+                            max={maxEndDate}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className="w-full border border-stone-300 text-stone-800 rounded p-2 text-sm focus:border-amber-500 outline-none"
                         />
+                        <p className="text-[10px] text-stone-400 mt-1">En fazla {maxEndDate.split('-').reverse().join('.')} tarihine kadar seçilebilir.</p>
                     </div>
 
-                    {/* Bilgilendirme: Gün Sayısı */}
                     {startDate && endDate && new Date(endDate) > new Date(startDate) && (
-                        <div className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 text-center">
+                        <div className={`text-xs p-2 rounded border text-center ${
+                            Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) > 20
+                                ? 'bg-red-50 text-red-700 border-red-100'
+                                : 'bg-amber-50 text-amber-700 border-amber-100'
+                        }`}>
                             Süre: <strong>{Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24))}</strong> Gün
                         </div>
                     )}
@@ -154,7 +165,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded font-medium transition-colors"
+                            className="px-4 py-2 text-sm text-black hover:bg-stone-100 rounded font-medium transition-colors"
                         >
                             İptal
                         </button>
