@@ -33,7 +33,6 @@ export const loanService = {
     },
 
     returnBook: async (barcode: string): Promise<ReturnLoanResponseDto> => {
-        // Backend endpointinize göre URL'i düzenleyin
         const response = await axiosInstance.post(`${API_ROUTE_BASE}/return`, { barcode });
         return response.data;
     },
