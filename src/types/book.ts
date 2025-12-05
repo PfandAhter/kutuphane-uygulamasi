@@ -34,8 +34,12 @@ export interface PaginatedResult<T> {
 }
 
 export interface BookFilterDto {
+    page?: number;
+    size?: number;
     title?: string;
     categoryId?: number;
+    authorId?: number;
+    publisherId?: number;
     publicationYearFrom?: number;
     publicationYearTo?: number;
     language?: string;
@@ -43,8 +47,6 @@ export interface BookFilterDto {
     pageCountMax?: number;
     hasAvailableCopy?: boolean;
     roomCode?: string;
-    page?: number;
-    size?: number;
 }
 
 export interface CopyFilterDto {

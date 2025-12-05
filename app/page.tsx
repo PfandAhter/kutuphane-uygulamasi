@@ -47,13 +47,26 @@ function HomeContent() {
 
     // --- Data Fetching ---
     useEffect(() => {
+        // URL'den tüm filtre parametrelerini alıyoruz
         const filter: BookFilterDto = {
-            title: (searchParams?.get("title") as string) ?? undefined,
+            page: page,
+            size: size,
+            title: (searchParams?.get("title") as string) || undefined,
+
+            // Yeni Filtreler
             categoryId: searchParams?.get("categoryId") ? parseInt(searchParams.get("categoryId") as string) : undefined,
+            authorId: searchParams?.get("authorId") ? parseInt(searchParams.get("authorId") as string) : undefined,
+            publisherId: searchParams?.get("publisherId") ? parseInt(searchParams.get("publisherId") as string) : undefined,
+
             publicationYearFrom: searchParams?.get("yearMin") ? parseInt(searchParams.get("yearMin") as string) : undefined,
             publicationYearTo: searchParams?.get("yearMax") ? parseInt(searchParams.get("yearMax") as string) : undefined,
-            page: page,
-            size: size
+
+            pageCountMin: searchParams?.get("pageCountMin") ? parseInt(searchParams.get("pageCountMin") as string) : undefined,
+            pageCountMax: searchParams?.get("pageCountMax") ? parseInt(searchParams.get("pageCountMax") as string) : undefined,
+
+            language: (searchParams?.get("language") as string) || undefined,
+            hasAvailableCopy: searchParams?.get("hasAvailableCopy") === 'true' ? true : undefined,
+            roomCode: (searchParams?.get("roomCode") as string) || undefined
         };
 
         let mounted = true;
@@ -61,6 +74,7 @@ function HomeContent() {
 
         (async () => {
             try {
+                // Filtre objesini servise gönderiyoruz
                 const result = await bookService.getAllBooks(filter);
                 if (!mounted) return;
                 setBooks(result.items || []);
@@ -129,12 +143,8 @@ function HomeContent() {
             <BorrowBookModal
                 isOpen={isBorrowModalOpen}
                 onClose={() => setIsBorrowModalOpen(false)}
-                bookTitle="Hızlı Ödünç İşlemi" // Genel bir başlık
-                onSuccess={() => {
-                    // Başarılı olursa (örneğin stok azalırsa) listeyi yenileyebiliriz
-                    // Şimdilik sadece modalı kapatalım veya sayfayı yenileyelim
-                    // router.refresh();
-                }}
+                bookTitle="Hızlı Ödünç İşlemi"
+                onSuccess={() => {}}
             />
 
             <ReturnBookModal

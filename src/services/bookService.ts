@@ -15,25 +15,40 @@ export const bookService = {
     async getAllBooks(filter: BookFilterDto): Promise<PaginatedResult<Book>> {
         const params = new URLSearchParams();
 
-        if (filter.title) params.append("Title", filter.title);
-        if (filter.categoryId) params.append("CategoryId", filter.categoryId.toString());
-        if (filter.publicationYearFrom) params.append("PublicationYearFrom", filter.publicationYearFrom.toString());
-        if (filter.publicationYearTo) params.append("PublicationYearTo", filter.publicationYearTo.toString());
-        if (filter.language) params.append("Language", filter.language);
-        if (filter.pageCountMin) params.append("PageCountMin", filter.pageCountMin.toString());
-        if (filter.pageCountMax) params.append("PageCountMax", filter.pageCountMax.toString());
-        if (filter.hasAvailableCopy !== undefined) params.append("HasAvailableCopy", filter.hasAvailableCopy.toString());
-        if (filter.roomCode) params.append("RoomCode", filter.roomCode);
+        const appendIfDefined = (key: string, value: any) => {
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value.toString());
+            }
+        };
+        appendIfDefined("Page", filter.page ?? 1);
+        appendIfDefined("Size", filter.size ?? 12);
 
-        params.append("Page", (filter.page ?? 1).toString());
-        params.append("Size", (filter.size ?? 12).toString());
+        appendIfDefined("Title", filter.title);
+        appendIfDefined("CategoryId", filter.categoryId);
+        appendIfDefined("AuthorId", filter.authorId);
+        appendIfDefined("PublisherId", filter.publisherId);
+        appendIfDefined("RoomCode", filter.roomCode);
+
+        appendIfDefined("PublicationYearFrom", filter.publicationYearFrom);
+        appendIfDefined("PublicationYearTo", filter.publicationYearTo);
+        appendIfDefined("PageCountMin", filter.pageCountMin);
+        appendIfDefined("PageCountMax", filter.pageCountMax);
+
+        appendIfDefined("Language", filter.language);
+        appendIfDefined("HasAvailableCopy", filter.hasAvailableCopy);
 
         const url = `${API_ROUTE_BASE}/list?${params.toString()}`;
 
-        const response = await fetch(url, { cache: "no-store" }); // Force-cache yapilabilir ama derste sikinti olabilir.
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
         if (!response.ok) {
-            throw new Error("Failed to fetch books");
+            throw new Error("Kitaplar listelenirken hata oluştu.");
         }
 
         return response.json();
