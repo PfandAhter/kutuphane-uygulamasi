@@ -18,7 +18,6 @@ export default function Sidebar() {
     const [publishers, setPublishers] = useState<Publisher[]>([]);
 
     // --- FILTER STATE ---
-    // URL'den varsayılan değerleri okuyoruz
     const [filters, setFilters] = useState({
         categoryId: searchParams.get('categoryId') || '',
         authorId: searchParams.get('authorId') || '',
@@ -31,11 +30,9 @@ export default function Sidebar() {
         hasAvailableCopy: searchParams.get('hasAvailableCopy') === 'true'
     });
 
-    // --- FETCH OPTIONS ---
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                // Promise.all ile hepsini paralel çekiyoruz
                 const [cats, auths, pubs] = await Promise.all([
                     categoryService.getCategories(),
                     authorService.getAllAuthors(),
@@ -59,15 +56,33 @@ export default function Sidebar() {
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             setFilters(prev => ({ ...prev, [name]: checked }));
-        } else {
-            setFilters(prev => ({ ...prev, [name]: value }));
+            return;
         }
+
+        // --- SAYISAL GİRİŞ KONTROLLERİ ---
+
+        // 1. Yayın Yılı Kontrolü (Min/Max Year)
+        if (name === 'yearMin' || name === 'yearMax') {
+            // Sadece sayı girilmesine izin ver
+            if (value && !/^\d+$/.test(value)) return;
+            // 4 karakterden fazla olamaz
+            if (value.length > 4) return;
+        }
+
+        // 2. Sayfa Sayısı Kontrolü (Min/Max Page)
+        if (name === 'pageMin' || name === 'pageMax') {
+            // Sadece sayı girilmesine izin ver
+            if (value && !/^\d+$/.test(value)) return;
+            // Aşırı uzun sayı girişini engelle (örn: 6 hane)
+            if (value.length > 6) return;
+        }
+
+        setFilters(prev => ({ ...prev, [name]: value }));
     };
 
     const applyFilters = () => {
         const params = new URLSearchParams(searchParams.toString());
 
-        // Mevcut parametreleri güncelle
         if (filters.categoryId) params.set('categoryId', filters.categoryId); else params.delete('categoryId');
         if (filters.authorId) params.set('authorId', filters.authorId); else params.delete('authorId');
         if (filters.publisherId) params.set('publisherId', filters.publisherId); else params.delete('publisherId');
@@ -82,9 +97,7 @@ export default function Sidebar() {
 
         if (filters.hasAvailableCopy) params.set('hasAvailableCopy', 'true'); else params.delete('hasAvailableCopy');
 
-        // Filtreleme yapıldığında 1. sayfaya dön
         params.set('page', '1');
-
         router.push(`/?${params.toString()}`);
     };
 
@@ -104,56 +117,52 @@ export default function Sidebar() {
                 <button onClick={clearFilters} className="text-xs text-stone-500 hover:text-red-600 underline">Temizle</button>
             </div>
 
-            {/* --- KATEGORİ --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Kategori</label>
                 <select
                     name="categoryId"
                     value={filters.categoryId}
                     onChange={handleInputChange}
-                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none bg-white"
                 >
                     <option value="">Tümü</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
             </div>
 
-            {/* --- YAZAR --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Yazar</label>
                 <select
                     name="authorId"
                     value={filters.authorId}
                     onChange={handleInputChange}
-                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none bg-white"
                 >
                     <option value="">Tümü</option>
                     {authors.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
                 </select>
             </div>
 
-            {/* --- YAYINEVİ --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Yayınevi</label>
                 <select
                     name="publisherId"
                     value={filters.publisherId}
                     onChange={handleInputChange}
-                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none bg-white"
                 >
                     <option value="">Tümü</option>
                     {publishers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
             </div>
 
-            {/* --- DİL --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Dil</label>
                 <select
                     name="language"
                     value={filters.language}
                     onChange={handleInputChange}
-                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none bg-white"
                 >
                     <option value="">Tümü</option>
                     <option value="Türkçe">Türkçe</option>
@@ -163,41 +172,54 @@ export default function Sidebar() {
                 </select>
             </div>
 
-            {/* --- YAYIN YILI ARALIĞI --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Yayın Yılı</label>
                 <div className="flex gap-2">
                     <input
-                        type="number" name="yearMin" placeholder="Min"
-                        value={filters.yearMin} onChange={handleInputChange}
-                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                        type="text" // number yerine text kullanıyoruz ki regex ile tam kontrol edelim
+                        inputMode="numeric"
+                        name="yearMin"
+                        placeholder="Min"
+                        value={filters.yearMin}
+                        onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none"
                     />
                     <input
-                        type="number" name="yearMax" placeholder="Max"
-                        value={filters.yearMax} onChange={handleInputChange}
-                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                        type="text"
+                        inputMode="numeric"
+                        name="yearMax"
+                        placeholder="Max"
+                        value={filters.yearMax}
+                        onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none"
                     />
                 </div>
             </div>
 
-            {/* --- SAYFA SAYISI ARALIĞI --- */}
             <div>
                 <label className="block text-xs font-bold text-stone-600 mb-1">Sayfa Sayısı</label>
                 <div className="flex gap-2">
                     <input
-                        type="number" name="pageMin" placeholder="Min"
-                        value={filters.pageMin} onChange={handleInputChange}
-                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                        type="text"
+                        inputMode="numeric"
+                        name="pageMin"
+                        placeholder="Min"
+                        value={filters.pageMin}
+                        onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none"
                     />
                     <input
-                        type="number" name="pageMax" placeholder="Max"
-                        value={filters.pageMax} onChange={handleInputChange}
-                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                        type="text"
+                        inputMode="numeric"
+                        name="pageMax"
+                        placeholder="Max"
+                        value={filters.pageMax}
+                        onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm text-black focus:border-amber-500 outline-none"
                     />
                 </div>
             </div>
 
-            {/* --- SADECE MÜSAİT OLANLAR --- */}
             <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
                 <input
                     type="checkbox"
