@@ -1,154 +1,223 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {categoryService} from "@/src/services/categoryService";
-import {Category} from "@/src/types/category";
-import CategoryListSkeleton from "@/src/components/ui/Skeletons/CategoryListSkeleton";
+import { categoryService } from '@/src/services/categoryService';
+import { authorService } from '@/src/services/authorService';
+import { publisherService } from '@/src/services/publisherService';
+import { Category } from '@/src/types/category';
+import { Author, Publisher } from '@/src/types/publisherAndAuthor';
 
-const Sidebar = () => {
+export default function Sidebar() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [author, setAuthor] = useState(searchParams.get('author') || '');
-    const [yearMin, setYearMin] = useState(searchParams.get('yearMin') || '');
-    const [yearMax, setYearMax] = useState(searchParams.get('yearMax') || '');
-
+    // --- DATA STATE ---
     const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [authors, setAuthors] = useState<Author[]>([]);
+    const [publishers, setPublishers] = useState<Publisher[]>([]);
 
+    // --- FILTER STATE ---
+    // URL'den varsayılan değerleri okuyoruz
+    const [filters, setFilters] = useState({
+        categoryId: searchParams.get('categoryId') || '',
+        authorId: searchParams.get('authorId') || '',
+        publisherId: searchParams.get('publisherId') || '',
+        yearMin: searchParams.get('yearMin') || '',
+        yearMax: searchParams.get('yearMax') || '',
+        pageMin: searchParams.get('pageCountMin') || '',
+        pageMax: searchParams.get('pageCountMax') || '',
+        language: searchParams.get('language') || '',
+        hasAvailableCopy: searchParams.get('hasAvailableCopy') === 'true'
+    });
+
+    // --- FETCH OPTIONS ---
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchFilters = async () => {
             try {
-                const result = await categoryService.getCategories();
+                // Promise.all ile hepsini paralel çekiyoruz
+                const [cats, auths, pubs] = await Promise.all([
+                    categoryService.getCategories(),
+                    authorService.getAllAuthors(),
+                    publisherService.getAllPublishers()
+                ]);
 
-                if(!result || result.length === 0) {
-                    setCategories([]);
-                    setIsLoading(false);
-                    return;
-                }
-                setCategories(result);
+                if (Array.isArray(cats)) setCategories(cats);
+                if (Array.isArray(auths)) setAuthors(auths);
+                if (Array.isArray(pubs)) setPublishers(pubs);
             } catch (error) {
-                console.error("Kategori verisi alınırken hata oluştu:", error);
-            } finally {
-                setIsLoading(false);
+                console.error("Filtre verileri yüklenemedi", error);
             }
         };
-
-        fetchCategories();
+        fetchFilters();
     }, []);
 
-    const handleCategoryClick = (categoryId?: number) => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (categoryId) {
-            params.set('categoryId', categoryId.toString());
+    // --- HANDLERS ---
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+
+        if (type === 'checkbox') {
+            const checked = (e.target as HTMLInputElement).checked;
+            setFilters(prev => ({ ...prev, [name]: checked }));
         } else {
-            params.delete('categoryId');
+            setFilters(prev => ({ ...prev, [name]: value }));
         }
+    };
+
+    const applyFilters = () => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Mevcut parametreleri güncelle
+        if (filters.categoryId) params.set('categoryId', filters.categoryId); else params.delete('categoryId');
+        if (filters.authorId) params.set('authorId', filters.authorId); else params.delete('authorId');
+        if (filters.publisherId) params.set('publisherId', filters.publisherId); else params.delete('publisherId');
+
+        if (filters.yearMin) params.set('yearMin', filters.yearMin); else params.delete('yearMin');
+        if (filters.yearMax) params.set('yearMax', filters.yearMax); else params.delete('yearMax');
+
+        if (filters.pageMin) params.set('pageCountMin', filters.pageMin); else params.delete('pageCountMin');
+        if (filters.pageMax) params.set('pageCountMax', filters.pageMax); else params.delete('pageCountMax');
+
+        if (filters.language) params.set('language', filters.language); else params.delete('language');
+
+        if (filters.hasAvailableCopy) params.set('hasAvailableCopy', 'true'); else params.delete('hasAvailableCopy');
+
+        // Filtreleme yapıldığında 1. sayfaya dön
+        params.set('page', '1');
+
         router.push(`/?${params.toString()}`);
     };
 
-    const handleApplyFilters = () => {
-        const params = new URLSearchParams(searchParams.toString());
-
-        if (author) params.set('author', author);
-        else params.delete('author');
-
-        if (yearMin) params.set('yearMin', yearMin);
-        else params.delete('yearMin');
-
-        if (yearMax) params.set('yearMax', yearMax);
-        else params.delete('yearMax');
-
-        router.push(`/?${params.toString()}`);
+    const clearFilters = () => {
+        setFilters({
+            categoryId: '', authorId: '', publisherId: '',
+            yearMin: '', yearMax: '', pageMin: '', pageMax: '',
+            language: '', hasAvailableCopy: false
+        });
+        router.push('/');
     };
 
     return (
-        <aside className="w-full md:w-64 bg-stone-50 border border-amber-200/80 rounded-md p-5 h-fit sticky top-4 shadow-sm">
+        <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+                <h3 className="font-serif font-bold text-lg text-amber-950">Filtreler</h3>
+                <button onClick={clearFilters} className="text-xs text-stone-500 hover:text-red-600 underline">Temizle</button>
+            </div>
 
-            <h3 className="font-serif font-bold text-lg mb-4 text-amber-950 border-b border-amber-200 pb-2">
-                Kategoriler
-            </h3>
+            {/* --- KATEGORİ --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Kategori</label>
+                <select
+                    name="categoryId"
+                    value={filters.categoryId}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                >
+                    <option value="">Tümü</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+            </div>
 
-            <ul className="space-y-2 text-sm text-stone-700">
-                {/* Tüm Kitaplar Seçeneği (Sabit Kalır) */}
-                <li
-                    onClick={() => handleCategoryClick()}
-                    className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all font-bold ${!searchParams.get('categoryId') ? 'text-amber-900' : ''}`}>
-                    Tüm Kitaplar
-                </li>
+            {/* --- YAZAR --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Yazar</label>
+                <select
+                    name="authorId"
+                    value={filters.authorId}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                >
+                    <option value="">Tümü</option>
+                    {authors.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
+                </select>
+            </div>
 
-                {/* Yükleniyor Durumu */}
-                {isLoading && (
-                    <CategoryListSkeleton/>
-                )}
+            {/* --- YAYINEVİ --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Yayınevi</label>
+                <select
+                    name="publisherId"
+                    value={filters.publisherId}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                >
+                    <option value="">Tümü</option>
+                    {publishers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+            </div>
 
-                {/* Dinamik Kategoriler */}
-                {!isLoading && categories.map((category) => (
-                    <li
-                        key={category.id}
-                        onClick={() => handleCategoryClick(category.id)}
-                        className={`cursor-pointer hover:text-amber-800 hover:translate-x-1 transition-all flex justify-between group ${
-                            searchParams.get('categoryId') === category.id.toString()
-                                ? 'text-amber-900 font-bold'
-                                : ''
-                        }`}
-                    >
-                        <span>{category.name}</span>
-                        {/* Eğer backend count verisi dönerse göster, dönmezse gizle */}
-                        {category.bookCount !== undefined && (
-                            <span className="text-amber-600/60 text-xs group-hover:text-amber-800">
-                                ({category.bookCount})
-                            </span>
-                        )}
-                    </li>
-                ))}
-            </ul>
+            {/* --- DİL --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Dil</label>
+                <select
+                    name="language"
+                    value={filters.language}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-md p-2 text-sm text-stone-700 focus:border-amber-500 outline-none"
+                >
+                    <option value="">Tümü</option>
+                    <option value="Türkçe">Türkçe</option>
+                    <option value="İngilizce">İngilizce</option>
+                    <option value="Almanca">Almanca</option>
+                    <option value="Fransızca">Fransızca</option>
+                </select>
+            </div>
 
-            <div className="mt-8">
-                <h3 className="font-serif font-bold text-md mb-3 text-amber-950 border-b border-amber-200 pb-2">
-                    Filtrele
-                </h3>
-
-                <div className="mb-4">
-                    <p className="font-serif font-medium text-stone-800 text-sm mb-2">Yazar</p>
+            {/* --- YAYIN YILI ARALIĞI --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Yayın Yılı</label>
+                <div className="flex gap-2">
                     <input
-                        type="text"
-                        placeholder="Yazar ara..."
-                        value={author}
-                        onChange={(e) => setAuthor(e.target.value)}
-                        className="w-full border border-amber-300 bg-white p-2 text-sm rounded text-stone-800 placeholder-stone-400 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all"
+                        type="number" name="yearMin" placeholder="Min"
+                        value={filters.yearMin} onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                    />
+                    <input
+                        type="number" name="yearMax" placeholder="Max"
+                        value={filters.yearMax} onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
                     />
                 </div>
-
-                <div className="mb-4">
-                    <p className="font-serif font-medium text-stone-800 text-sm mb-2">Yayın Yılı</p>
-                    <div className="flex gap-2">
-                        <input
-                            type="number"
-                            placeholder="Min"
-                            value={yearMin}
-                            onChange={(e) => setYearMin(e.target.value)}
-                            className="w-1/2 border border-amber-300 bg-white p-2 text-sm rounded text-stone-800 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Max"
-                            value={yearMax}
-                            onChange={(e) => setYearMax(e.target.value)}
-                            className="w-1/2 border border-amber-300 bg-white p-2 text-sm rounded text-stone-800 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 transition-all"
-                        />
-                    </div>
-                </div>
-
-                <button
-                    onClick={handleApplyFilters}
-                    className="w-full bg-amber-900 text-amber-50 font-serif py-2 rounded text-sm hover:bg-amber-800 transition shadow-md">
-                    Filtreleri Uygula
-                </button>
             </div>
-        </aside>
-    );
-};
 
-export default Sidebar;
+            {/* --- SAYFA SAYISI ARALIĞI --- */}
+            <div>
+                <label className="block text-xs font-bold text-stone-600 mb-1">Sayfa Sayısı</label>
+                <div className="flex gap-2">
+                    <input
+                        type="number" name="pageMin" placeholder="Min"
+                        value={filters.pageMin} onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                    />
+                    <input
+                        type="number" name="pageMax" placeholder="Max"
+                        value={filters.pageMax} onChange={handleInputChange}
+                        className="w-full border border-stone-300 rounded-md p-2 text-sm focus:border-amber-500 outline-none"
+                    />
+                </div>
+            </div>
+
+            {/* --- SADECE MÜSAİT OLANLAR --- */}
+            <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+                <input
+                    type="checkbox"
+                    id="hasCopy"
+                    name="hasAvailableCopy"
+                    checked={filters.hasAvailableCopy}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-amber-600 rounded border-stone-300 focus:ring-amber-500"
+                />
+                <label htmlFor="hasCopy" className="text-sm text-stone-700 cursor-pointer select-none">
+                    Sadece Müsait Olanlar
+                </label>
+            </div>
+
+            <button
+                onClick={applyFilters}
+                className="w-full bg-amber-900 hover:bg-amber-800 text-white font-bold py-2.5 rounded-lg shadow-md transition-all active:scale-95"
+            >
+                Filtrele
+            </button>
+        </div>
+    );
+}
