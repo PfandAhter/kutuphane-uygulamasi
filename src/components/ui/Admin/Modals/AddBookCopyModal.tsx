@@ -99,9 +99,11 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
         e.preventDefault();
         setLoading(true);
 
+        const toastId = toast.loading("İşlem gerçekleştiriliyor...");
+
         const parsedRoomId = parseInt(roomId);
         if (isNaN(parsedRoomId)) {
-            toast.error("Lütfen geçerli bir oda seçiniz.");
+            toast.error("Lütfen geçerli bir oda seçiniz.", { id: toastId });
             setLoading(false);
             return;
         }
@@ -109,7 +111,7 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
         // Seçilen Rafın Kodunu Bul
         const selectedShelf = shelves.find(s => s.id === parseInt(shelfId));
         if (!selectedShelf) {
-            toast.error("Lütfen geçerli bir raf seçiniz.");
+            toast.error("Lütfen geçerli bir raf seçiniz.", { id: toastId });
             setLoading(false);
             return;
         }
@@ -124,9 +126,8 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
         try {
             await bookCopyService.createCopy(createBookCopyDto);
 
-            toast.success("Kopya başarıyla eklendi!");
+            toast.success("Kopya başarıyla eklendi!", { id: toastId });
 
-            // Temizlik ve Kapatma
             setBarcode("");
             setRoomId("");
             setShelfId("");
@@ -134,10 +135,14 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
 
         } catch (error:any) {
             console.error("Kitap eklerken hata:", error);
-            if(error.response.data){
-                toast.error(error.response.data);
-            }else{
-                toast.error("Kopya Eklerken bir hata oluştu.");
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
             }
         } finally {
             setLoading(false);

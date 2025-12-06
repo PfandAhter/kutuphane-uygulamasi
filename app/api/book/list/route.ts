@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
         const response = await axios.get(`${API_BACKEND_URL}/api/Book/get-all-books?${query}`);
 
-        console.log("Proxy GET /api/books/list succeeded", response.data);
+        console.log("Proxy GET /api/books/list succeeded");
         return NextResponse.json(response.data, { status: 200 });
     } catch (err: any) {
         console.error("Proxy GET /api/books/list error: ", err?.message);

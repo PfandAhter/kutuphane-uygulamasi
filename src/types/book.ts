@@ -20,8 +20,8 @@ export interface Book {
     categoryName: string;
     publisherId: number;
     publisherName: string;
-    imageUrl?: string; // Not in DTO but used in UI, might need to handle or use placeholder
-    price?: string; // Not in DTO, UI has it.
+    imageUrl: string;
+    summary: string;
 }
 
 
@@ -85,6 +85,8 @@ export interface CreateBookDto {
     categoryName?: string;
     publisherId?: number;
     publisherName?: string;
+    imageUrl?: string;
+    summary?: string;
 }
 
 export interface UpdateBookDto {
@@ -97,6 +99,8 @@ export interface UpdateBookDto {
     authorId: number;
     publisherId: number;
     categoryId: number;
+    imageUrl: string;
+    summary: string;
 }
 
 export interface BookComment {
