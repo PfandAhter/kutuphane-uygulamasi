@@ -27,8 +27,17 @@ export default function DeleteConfirmationModal({ isOpen, onClose, bookId, bookT
             toast.success("Kitap silindi.", { id: toastId });
             onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Silme işlemi başarısız. (Kitabın kopyaları olabilir)", { id: toastId });
+        } catch (error:any) {
+            console.error("Kategori eklenemedi", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }

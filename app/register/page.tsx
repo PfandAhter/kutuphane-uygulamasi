@@ -21,6 +21,7 @@ export default function RegisterPage() {
     // --- PAROLA KONTROL MANTIĞI ---
     const password = formData.password;
     const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
@@ -179,6 +180,9 @@ export default function RegisterPage() {
                             <div className="mt-2 text-xs space-y-1 bg-[#f6dcb7] p-2 rounded border border-[#c79f74]">
                                 <p className={`flex items-center text-black gap-1.5 transition-colors ${hasUpperCase ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
                                     <span className="text-[10px]">{hasUpperCase ? '✔' : '○'}</span> En az 1 büyük harf
+                                </p>
+                                <p className={`flex items-center text-black gap-1.5 transition-colors ${hasLowerCase ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
+                                    <span className="text-[10px]">{hasLowerCase ? '✔' : '○'}</span> En az 1 küçük harf
                                 </p>
                                 <p className={`flex items-center text-black gap-1.5 transition-colors ${hasNumber ? 'text-green-700 font-semibold' : 'text-[#8a7a6a]'}`}>
                                     <span className="text-[10px]">{hasNumber ? '✔' : '○'}</span> En az 1 rakam

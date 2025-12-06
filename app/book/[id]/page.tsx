@@ -15,7 +15,6 @@ import CopyStatusList from '@/src/components/ui/BookDetail/CopyStatusList';
 import BookReviews from '@/src/components/ui/BookDetail/BookReviews';
 import AuthorOtherBooks from "@/src/components/ui/BookDetail/AuthorOtherBooks";
 import BookDetailSkeleton from "@/src/components/ui/Skeletons/BookDetailSkeleton";
-import BorrowBookModal from '@/src/components/ui/Book/BorrowBookModal'
 
 export default function BookDetailPage() {
     const params = useParams();
@@ -27,21 +26,20 @@ export default function BookDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Modal States
     const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
 
-    // Varsayılan barkod (İlk uygun kopyanın barkodu)
     const [defaultBarcode, setDefaultBarcode] = useState<string>('');
 
     const primaryAuthor = book?.bookAuthors && book.bookAuthors.length > 0
         ? book.bookAuthors[0].author
         : null;
 
-    // Veri Çekme
     const fetchBook = async () => {
         if (!id) return;
         try {
             const data = await bookService.getBookDetails(id);
+            console.log("AUTHOR TEST TEST ",data.bookAuthors);
+            console.log("IMAGE URL GELIYOR MU TEST ?", data.imageUrl);
             setBook(data);
         } catch (err) {
             console.error(err);
@@ -54,10 +52,7 @@ export default function BookDetailPage() {
     useEffect(() => {
         setLoading(true);
         fetchBook();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
-
-    // --- HANDLERS ---
 
     const handleBorrowClick = () => {
         if (!isAuthenticated) {
@@ -66,29 +61,17 @@ export default function BookDetailPage() {
         }
 
         if (book) {
-            // Müsait olan İLK kopyayı bul
             const availableCopy = book.bookCopies.find(c => c.isAvailable);
 
             if (availableCopy) {
                 setDefaultBarcode(availableCopy.barcodeNumber || '');
             } else {
-                setDefaultBarcode(''); // Hiçbiri müsait değilse boş bırak (Kullanıcı manuel girebilir)
+                setDefaultBarcode('');
             }
         }
 
         setIsBorrowModalOpen(true);
     };
-
-    const handleBorrowSuccess = () => {
-        fetchBook(); // Stok durumunu güncelle
-    };
-
-    const handleCloseModal = () => {
-        setIsBorrowModalOpen(false);
-        setDefaultBarcode('');
-    };
-
-    // --- RENDER ---
 
     if (loading) {
         return (
@@ -132,13 +115,11 @@ export default function BookDetailPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
-                        {/* Kitap Bilgi Kartı (Buton Burada) */}
                         <BookInfoCard
                             book={book}
                             onBorrowClick={handleBorrowClick}
                         />
 
-                        {/* Kopya Durum Listesi (Butonsuz) */}
                         <CopyStatusList book={book} />
 
                         <BookReviews bookId={book.id} />
@@ -158,14 +139,6 @@ export default function BookDetailPage() {
                     </div>
                 </div>
             </main>
-
-            {/* --- MODAL --- */}
-            <BorrowBookModal
-                isOpen={isBorrowModalOpen}
-                onClose={handleCloseModal}
-                bookTitle={book.title}
-                onSuccess={handleBorrowSuccess}
-            />
         </div>
     );
 }

@@ -33,6 +33,8 @@ export interface BookDetail {
     publicationYear: number;
     language: string;
     description?: string; // Backend modelinde yok ama genelde olur, UI için ekledim
+    imageUrl: string;
+    summary: string;
     category: Category;
     publisher: Publisher;
     bookAuthors: BookAuthor[];

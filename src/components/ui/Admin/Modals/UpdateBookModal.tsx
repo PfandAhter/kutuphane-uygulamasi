@@ -17,18 +17,26 @@ interface Props {
     onSuccess: () => void;
 }
 
+const DEFAULT_BOOK_IMAGE = "https://i.ibb.co/F47gc8Xk/unnamed.jpg";
 export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Props) {
-    // 1. DÜZELTME: State'i başlangıçta book verisiyle dolduruyoruz (varsa)
-    // Yoksa boş string veriyoruz ki inputlar "controlled" kalsın.
+    const getInitialAuthorId = (b: Book | null): number => {
+        if (b?.bookAuthors && b.bookAuthors.length > 0) {
+            return b.bookAuthors[0].authorId;
+        }
+        return b?.authorId || 0;
+    };
+
     const [form, setForm] = useState<Partial<UpdateBookDto>>({
         title: book?.title || '',
         isbn: book?.isbn || '',
         pageCount: book?.pageCount || 0,
         publicationYear: book?.publicationYear || 0,
         language: book?.language || '',
-        authorId: book?.authorId || 0,
+        authorId: getInitialAuthorId(book),
         publisherId: book?.publisherId || 0,
-        categoryId: book?.categoryId || 0
+        categoryId: book?.categoryId || 0,
+        imageUrl: book?.imageUrl || DEFAULT_BOOK_IMAGE,
+        summary: book?.summary || '',
     });
 
     const [authors, setAuthors] = useState<Author[]>([]);
@@ -51,9 +59,12 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
         }
     }, [isOpen]);
 
-    // Book değişirse formu güncelle (useEffect ile senkronizasyon yerine key kullanımı daha iyidir ama bu da çalışır)
     useEffect(() => {
         if (book) {
+            const currentAuthorId = (book.bookAuthors && book.bookAuthors.length > 0)
+                ? book.bookAuthors[0].authorId
+                : book.authorId;
+
             setForm({
                 id: book.id,
                 title: book.title,
@@ -61,16 +72,18 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                 pageCount: book.pageCount,
                 publicationYear: book.publicationYear,
                 language: book.language,
-                authorId: book.authorId,
+                authorId: currentAuthorId,
                 publisherId: book.publisherId,
-                categoryId: book.categoryId // Burada categoryId'nin book nesnesinde olduğundan emin ol
+                categoryId: book.categoryId,
+                imageUrl: book.imageUrl,
+                summary: book.summary,
             });
         }
     }, [book]);
 
     if (!isOpen || !book) return null;
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
@@ -81,6 +94,10 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
         const toastId = toast.loading("Güncelleniyor...");
 
         try {
+            const finalImageUrl = (!form.imageUrl || form.imageUrl.trim() === '')
+                ? DEFAULT_BOOK_IMAGE
+                : form.imageUrl.trim();
+
             const dto: UpdateBookDto = {
                 id: book.id,
                 title: form.title!,
@@ -90,7 +107,9 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                 language: form.language!,
                 authorId: Number(form.authorId),
                 publisherId: Number(form.publisherId),
-                categoryId: Number(form.categoryId)
+                categoryId: Number(form.categoryId),
+                imageUrl: finalImageUrl,
+                summary: form.summary!,
             };
 
             await bookService.updateBook(book.id, dto);
@@ -98,81 +117,139 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
             toast.success("Kitap güncellendi!", { id: toastId });
             onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Güncelleme hatası", { id: toastId });
+        } catch (error:any) {
+            console.error("Kitap Guncelleme hatasi: ", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Helper class
     const inputClass = "w-full border border-stone-300 p-2 rounded text-sm text-black focus:outline-none focus:border-amber-500 bg-white";
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl border border-stone-200 p-6" onClick={e => e.stopPropagation()}>
-                <h3 className="font-serif font-bold text-xl text-amber-950 mb-6 border-b border-stone-100 pb-2">Kitap Düzenle</h3>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl border border-stone-200 p-6 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">Kitap Adı</label>
-                            {/* DÜZELTME 2: value={form.title || ''} kullanarak undefined olmasını engelliyoruz */}
-                            <input type="text" name="title" value={form.title || ''} onChange={handleChange} className={inputClass} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">ISBN</label>
-                            <input type="text" name="isbn" value={form.isbn || ''} onChange={handleChange} className={inputClass} />
+                <h3 className="font-serif font-bold text-xl text-amber-950 mb-4 border-b border-stone-100 pb-2">Kitap Düzenle</h3>
+
+                <div className="overflow-y-auto pr-2">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Kitap Adı</label>
+                                <input type="text" name="title" value={form.title || ''} onChange={handleChange} className={inputClass} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">ISBN</label>
+                                <input type="text" name="isbn" value={form.isbn || ''} onChange={handleChange} className={inputClass} />
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">Yazar</label>
-                            <select name="authorId" value={form.authorId || ''} onChange={handleChange} className={inputClass}>
-                                <option value="">Seçiniz...</option>
-                                {authors.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
-                            </select>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Yazar</label>
+                                <select name="authorId" value={form.authorId || ''} onChange={handleChange} className={inputClass}>
+                                    <option value="">Seçiniz...</option>
+                                    {authors.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Kategori</label>
+                                <select name="categoryId" value={form.categoryId || ''} onChange={handleChange} className={inputClass}>
+                                    <option value="">Seçiniz...</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Yayınevi</label>
+                                <select name="publisherId" value={form.publisherId || ''} onChange={handleChange} className={inputClass}>
+                                    <option value="">Seçiniz...</option>
+                                    {publishers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">Kategori</label>
-                            <select name="categoryId" value={form.categoryId || ''} onChange={handleChange} className={inputClass}>
-                                <option value="">Seçiniz...</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">Yayınevi</label>
-                            <select name="publisherId" value={form.publisherId || ''} onChange={handleChange} className={inputClass}>
-                                <option value="">Seçiniz...</option>
-                                {publishers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="text-xs font-bold text-stone-600 block mb-1">Yıl</label>
                                 <input type="number" name="publicationYear" value={form.publicationYear || ''} onChange={handleChange} className={inputClass} />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-stone-600 block mb-1">Sayfa</label>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Sayfa Sayısı</label>
                                 <input type="number" name="pageCount" value={form.pageCount || ''} onChange={handleChange} className={inputClass} />
                             </div>
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Dil</label>
+                                <select name="language" value={form.language || ''} onChange={handleChange} className={inputClass}>
+                                    <option value="Türkçe">Türkçe</option>
+                                    <option value="İngilizce">İngilizce</option>
+                                    <option value="Almanca">Almanca</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-stone-600 block mb-1">Dil</label>
-                            <select name="language" value={form.language || ''} onChange={handleChange} className={inputClass}>
-                                <option value="Türkçe">Türkçe</option>
-                                <option value="İngilizce">İngilizce</option>
-                                <option value="Almanca">Almanca</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-stone-100 mt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-stone-500 hover:bg-stone-100 rounded text-sm">İptal</button>
-                        <button type="submit" disabled={loading} className="px-6 py-2 bg-amber-900 text-white rounded text-sm hover:bg-amber-800">
-                            {loading ? '...' : 'Güncelle'}
-                        </button>
-                    </div>
-                </form>
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
+                            <div>
+                                <label className="text-xs font-bold text-stone-600 block mb-1">Kapak Resmi URL</label>
+                                <input
+                                    type="text"
+                                    name="imageUrl"
+                                    value={form.imageUrl || ''}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                    placeholder={DEFAULT_BOOK_IMAGE}
+                                />
+                            </div>
+                            <div className="w-16 h-24 bg-stone-100 border border-stone-200 rounded flex items-center justify-center overflow-hidden mt-1 shrink-0">
+                                {form.imageUrl ? (
+                                    <img
+                                        src={form.imageUrl}
+                                        alt="Önizleme"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => (e.target as HTMLImageElement).src = DEFAULT_BOOK_IMAGE}
+                                    />
+                                ) : (
+                                    <span className="text-[10px] text-stone-400 text-center">Resim Yok</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-xs font-bold text-stone-600">Kitap Özeti</label>
+                                <span className={`text-[10px] ${form.summary && form.summary.length > 300 ? 'text-red-500' : 'text-stone-400'}`}>
+                                    {form.summary ? form.summary.length : 0}/300
+                                </span>
+                            </div>
+                            <textarea
+                                name="summary"
+                                rows={4}
+                                maxLength={300}
+                                value={form.summary || ''}
+                                onChange={handleChange}
+                                className={`${inputClass} resize-none`}
+                                placeholder="Kitap özeti..."
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-stone-100 mt-2">
+                            <button type="button" onClick={onClose} className="px-4 py-2 text-stone-500 hover:bg-stone-100 rounded text-sm font-medium transition-colors">İptal</button>
+                            <button type="submit" disabled={loading} className="px-6 py-2 bg-amber-900 text-white rounded text-sm font-medium hover:bg-amber-800 disabled:opacity-70 transition-colors">
+                                {loading ? '...' : 'Güncelle'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
