@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const bookId = searchParams.get('id');
 
-        console.log("Server Side - Query Param ile gelen ID:", bookId);
+        console.log("Proxy GET /api/Book/get-book-details called", bookId);
 
         if (!bookId) {
             return NextResponse.json({ error: "id parametresi eksik." }, { status: 400 });
@@ -21,10 +21,10 @@ export async function GET(request: NextRequest) {
             },
         });
 
+        console.log("Proxy GET /api/Book/get-book-details called successfully");
         return NextResponse.json(response.data, { status: 200 });
-
     } catch (err: any) {
-        console.error("Proxy GET Error:", err?.response?.data || err.message);
+        console.error("Proxy GET /api/Book/get-book-details error:", err?.response?.data || err.message);
 
         if (err.response){
             return NextResponse.json(err.response.data || { error: "Kitap detayları alınamadı." }, { status: err.response.status });

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/src/hooks/useAuth';
 import { commentService } from '@/src/services/commentService';
 import { BookComment } from '@/src/types/comment';
+import GenericConfirmModal from '@/src/components/ui/Admin/Modals/GenericConfirmationModal';
 
 interface Props {
     bookId: number;
@@ -13,18 +14,19 @@ interface Props {
 const BookReviews = ({ bookId }: Props) => {
     const { user, isAuthenticated } = useAuth();
 
-    // Data States
     const [comments, setComments] = useState<BookComment[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
 
-    // Pagination States
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
     const [newComment, setNewComment] = useState("");
     const [rating, setRating] = useState(5);
     const [submitting, setSubmitting] = useState(false);
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [commentIdToDelete, setCommentIdToDelete] = useState<number | null>(null);
 
     const fetchComments = useCallback(async () => {
         setLoading(true);
@@ -86,13 +88,18 @@ const BookReviews = ({ bookId }: Props) => {
         }
     };
 
-    const handleDelete = async (commentId: number) => {
-        if (!confirm("Bu yorumu silmek istediğinize emin misiniz?")) return;
+    const handleDeleteClick = (commentId: number) => {
+        setCommentIdToDelete(commentId);
+        setIsDeleteModalOpen(true);
+    };
 
+    const handleConfirmDelete = async () => {
+        if (!commentIdToDelete) return;
         const toastId = toast.loading("Yorum Siliniyor...");
+
         try {
-            await commentService.deleteComment(commentId);
-            toast.success("Yorum silindi.", { id: toastId });
+            await commentService.deleteComment(commentIdToDelete);
+            toast.success("Yorum başarıyla silindi.", {id: toastId});
             fetchComments();
         } catch (error: any) {
             console.error("Yorum silme basarisiz", error.response.data);
@@ -101,9 +108,9 @@ const BookReviews = ({ bookId }: Props) => {
                 (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
 
             if (errorMessage) {
-                toast.error(errorMessage, { id: toastId });
+                toast.error(errorMessage, {id: toastId});
             } else {
-                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", {id: toastId});
             }
         }
     };
@@ -157,11 +164,12 @@ const BookReviews = ({ bookId }: Props) => {
 
                                     {isAuthenticated && user && (user.id === comment.userId || user.roles.includes('Admin')) && (
                                         <button
-                                            onClick={() => handleDelete(comment.id)}
-                                            className="text-stone-300 hover:text-red-500 text-xs transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 rounded hover:bg-red-50"
+                                            onClick={() => handleDeleteClick(comment.id)}
+                                            className="text-stone-300 hover:text-red-500 text-xs transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 rounded hover:bg-red-50 flex items-center gap-1"
                                             title="Yorumu Sil"
                                         >
-                                            🗑️ Sil
+                                            <span>🗑️</span>
+                                            <span className="hidden sm:inline">Sil</span>
                                         </button>
                                     )}
                                 </div>
@@ -219,7 +227,7 @@ const BookReviews = ({ bookId }: Props) => {
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 placeholder="Kitap hakkında düşünceleriniz..."
-                                className="w-full p-3 border text-black rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
+                                className="w-full p-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
                                 required
                             />
                         </div>
@@ -243,6 +251,17 @@ const BookReviews = ({ bookId }: Props) => {
                     </a>
                 </div>
             )}
+
+            <GenericConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Yorumu Sil"
+                message="Bu yorumu kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Evet, Sil"
+                cancelText="Vazgeç"
+                isDanger={true}
+            />
         </div>
     );
 };
