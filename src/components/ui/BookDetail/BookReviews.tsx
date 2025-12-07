@@ -219,7 +219,7 @@ const BookReviews = ({ bookId }: Props) => {
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 placeholder="Kitap hakkında düşünceleriniz..."
-                                className="w-full p-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
+                                className="w-full p-3 border text-black rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
                                 required
                             />
                         </div>

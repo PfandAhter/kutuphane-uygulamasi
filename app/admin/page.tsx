@@ -4,13 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { dashboardService } from '@/src/services/dashboardService';
 import { DashboardStatus } from '@/src/types/dashboard';
 
-// İstatistik Kartı Componenti
 interface StatCardProps {
     title: string;
-    value: number | string; // Loading sırasında string gelebilir
+    value: number | string;
     icon: React.ReactNode;
     trend?: string;
-    isDanger?: boolean; // Kırmızı uyarı için
+    isDanger?: boolean;
 }
 
 const StatCard = ({ title, value, icon, trend, isDanger }: StatCardProps) => (
@@ -19,7 +18,6 @@ const StatCard = ({ title, value, icon, trend, isDanger }: StatCardProps) => (
             <p className={`text-sm font-medium mb-1 ${isDanger ? 'text-red-700' : 'text-stone-500'}`}>{title}</p>
             <h3 className={`text-3xl font-bold font-serif ${isDanger ? 'text-red-800' : 'text-amber-950'}`}>{value}</h3>
 
-            {/* Backend trend verisi göndermediği için şimdilik statik veya hesaplanmış gösteriyoruz */}
             {trend && (
                 <span className={`text-xs font-bold mt-2 inline-block px-2 py-0.5 rounded ${isDanger ? 'bg-red-100 text-red-700' : 'bg-green-50 text-green-600'}`}>
                     {trend}
@@ -32,7 +30,6 @@ const StatCard = ({ title, value, icon, trend, isDanger }: StatCardProps) => (
     </div>
 );
 
-// Skeleton Loading Componenti
 const StatCardSkeleton = () => (
     <div className="bg-white p-6 rounded-lg border border-stone-200 shadow-sm animate-pulse">
         <div className="flex justify-between items-start">
@@ -111,7 +108,7 @@ export default function AdminDashboard() {
                 )}
             </div>
 
-            {/* Son Hareketler Tablosu (Statik kalabilir veya LoanService bağlanabilir) */}
+            {/* Son Hareketler Tablosu (Statik kalabilir veya LoanService bağlanabilir)
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden">
                 <div className="p-5 border-b border-stone-100 flex justify-between items-center">
                     <h3 className="font-bold text-stone-800">Son İşlemler</h3>
@@ -141,7 +138,7 @@ export default function AdminDashboard() {
                     </tr>
                     </tbody>
                 </table>
-            </div>
+            </div>*/}
         </div>
     );
 }
