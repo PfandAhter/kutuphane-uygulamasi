@@ -16,7 +16,7 @@ export async function DELETE(request: NextRequest) {
 
         console.log(`Proxy DELETE /api/comments/delete called for ID: ${commentId}`);
 
-        await axios.delete(`${API_BACKEND_URL}/api/Comments/${commentId}`, {
+        await axios.delete(`${API_BACKEND_URL}/api/BookComment/delete-comment/${commentId}`, {
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })
