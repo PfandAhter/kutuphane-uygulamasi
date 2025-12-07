@@ -119,9 +119,8 @@ export const bookService = {
         const response = await fetch(url, { cache: 'no-store' });
         const data = await response.json();
 
-        console.log("Fetching books response",  data);
         if (!response.ok) return [];
         return data;
-        //return data.items.filter((b: any) => b.id !== currentBookId); // Bunu duzelticez.
+        //return data.items.filter((b: any) => b.id !== currentBookId); //TODO: Bunu duzelticez.
     }
 };
