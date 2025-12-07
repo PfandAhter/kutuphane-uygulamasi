@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         const authHeader = request.headers.get("Authorization");
         console.log(`Proxy POST /api/fines/pay called for FineID: ${fineId}`);
         const response = await axios.post(
-            `${API_BACKEND_URL}/api/Fines/pay?fineId=${fineId}`,
+            `${API_BACKEND_URL}/api/Fine/pay?fineId=${fineId}`,
             {},
             {
                 headers: {
