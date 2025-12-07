@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserFineDto } from '@/src/types/user';
 import CreditCardVisual from './CreditCardVisual';
 import toast from 'react-hot-toast';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PaymentReceiptPdf } from '@/src/components/ui/Pdf/PaymentReceipt';
 
 interface Props {
     isOpen: boolean;
@@ -18,6 +20,9 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
     const [expiry, setExpiry] = useState('');
     const [cvc, setCvc] = useState('');
     const [focusedField, setFocusedField] = useState<string | null>(null);
+
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [receiptId, setReceiptId] = useState("");
 
     const [simulatingPayment, setSimulatingPayment] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
@@ -73,10 +78,51 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
         setSimulatingPayment(true);
 
         await new Promise(resolve => setTimeout(resolve, 3500));
+        const generatedReceiptId = Math.floor(100000 + Math.random() * 900000).toString();
+        setReceiptId(generatedReceiptId);
+
         onConfirm();
         setSimulatingPayment(false);
+        setPaymentSuccess(true);
     };
 
+    if (paymentSuccess) {
+        return (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-8 text-center border border-stone-200" onClick={e => e.stopPropagation()}>
+                    <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-sm">
+                        ✅
+                    </div>
+                    <h3 className="text-2xl font-serif font-bold text-stone-800 mb-2">Ödeme Başarılı!</h3>
+                    <p className="text-stone-500 text-sm mb-8">Borcunuz başarıyla tahsil edilmiştir.</p>
+
+                    <div className="space-y-3">
+                        {/* PDF İndirme Butonu */}
+                        <PDFDownloadLink
+                            document={<PaymentReceiptPdf fine={fine} userName={cardName} paymentId={receiptId} />}
+                            fileName={`Dekont-${receiptId}.pdf`}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-lg font-bold transition-colors shadow-md"
+                        >
+                            {({ blob, url, loading, error }) => (
+                                loading ? 'Dekont Hazırlanıyor...' : (
+                                    <>
+                                        <span>📄</span> Dekontu İndir
+                                    </>
+                                )
+                            )}
+                        </PDFDownloadLink>
+
+                        <button
+                            onClick={onClose}
+                            className="w-full px-4 py-3 bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 rounded-lg font-bold transition-colors"
+                        >
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in overflow-y-auto" onClick={!isLoading ? onClose : undefined}>
