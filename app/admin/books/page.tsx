@@ -9,26 +9,21 @@ import DeleteConfirmationModal from '@/src/components/ui/Admin/Modals/DeleteConf
 
 import { bookService } from '@/src/services/bookService';
 import { categoryService } from '@/src/services/categoryService';
-// DÜZELTME: Güncellediğin Book interface'ini kullanıyoruz
 import { Book, BookFilterDto } from '@/src/types/book';
 import { Category } from "@/src/types/category";
 
 export default function AdminBooksPage() {
-    // --- STATE YÖNETİMİ ---
     const [books, setBooks] = useState<Book[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
 
-    // Filtreler
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
 
-    // Pagination
     const [page, setPage] = useState(1);
     const pageSize = 10;
 
-    // Modal Durumu
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isManageModalOpen, setIsManageModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -87,7 +82,6 @@ export default function AdminBooksPage() {
         fetchBooks();
     }, [page]);
 
-    // --- HANDLERS ---
     const handleSearch = async () => {
         setPage(1);
         try{
@@ -117,7 +111,6 @@ export default function AdminBooksPage() {
         fetchBooks();
     };
 
-    // --- RENDER ---
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -152,7 +145,6 @@ export default function AdminBooksPage() {
                 >
                     <option value="">Tüm Kategoriler</option>
 
-                    {/* State'ten gelen kategorileri listeliyoruz */}
                     {categories.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                             {cat.name}
@@ -177,7 +169,6 @@ export default function AdminBooksPage() {
                         <th className="px-6 py-3">Yazar(lar)</th>
                         <th className="px-6 py-3">Kategori</th>
                         <th className="px-6 py-3">Yayın Yılı</th>
-                        {/* YENİ EKLENEN KOLON BAŞLIĞI */}
                         <th className="px-6 py-3 text-center">Kopya (Stok)</th>
                         <th className="px-6 py-3 text-right">İşlemler</th>
                     </tr>
@@ -225,7 +216,6 @@ export default function AdminBooksPage() {
 
                                 <td className="px-6 py-4">
                                     <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs">
-                                        {/* Kategori nesnesi yoksa categoryName stringini kullan */}
                                         {book.category?.name || book.categoryName || "Genel"}
                                     </span>
                                 </td>

@@ -15,21 +15,17 @@ interface AddCopyModalProps {
 }
 
 const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
-    // Form State'leri
     const [barcode, setBarcode] = useState("");
     const [roomId, setRoomId] = useState("");
     const [shelfId, setShelfId] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Data States
     const [rooms, setRooms] = useState<Room[]>([]);
     const [shelves, setShelves] = useState<Shelf[]>([]);
 
-    // Loading States
     const [roomsLoading, setRoomsLoading] = useState(false);
     const [shelvesLoading, setShelvesLoading] = useState(false);
 
-    // 1. MODAL AÇILINCA ODALARI ÇEK
     useEffect(() => {
         if (!isOpen) return;
 
@@ -108,7 +104,6 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
             return;
         }
 
-        // Seçilen Rafın Kodunu Bul
         const selectedShelf = shelves.find(s => s.id === parseInt(shelfId));
         if (!selectedShelf) {
             toast.error("Lütfen geçerli bir raf seçiniz.", { id: toastId });
@@ -171,7 +166,6 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
                         <div className="text-stone-800 font-medium">{book.title} <span className="text-stone-500 font-normal">(ID: {book.id})</span></div>
                     </div>
 
-                    {/* Barkod */}
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Barkod Numarası <span className="text-red-500">*</span></label>
                         <input
@@ -187,7 +181,6 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
                         <p className="text-[10px] text-stone-400 mt-1">Sadece sayısal değerler kabul edilir.</p>
                     </div>
 
-                    {/* Oda Seçimi */}
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Oda <span className="text-red-500">*</span></label>
                         <select
@@ -210,14 +203,13 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
                         </select>
                     </div>
 
-                    {/* Raf Seçimi (Dinamik) */}
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Raf <span className="text-red-500">*</span></label>
                         <select
                             required
                             value={shelfId}
                             onChange={(e) => setShelfId(e.target.value)}
-                            disabled={!roomId || shelvesLoading} // Oda seçilmediyse pasif
+                            disabled={!roomId || shelvesLoading}
                             className="w-full border text-black rounded p-2 text-sm focus:border-amber-500 outline-none bg-white disabled:bg-stone-100 disabled:text-gray-400"
                         >
                             <option value="">

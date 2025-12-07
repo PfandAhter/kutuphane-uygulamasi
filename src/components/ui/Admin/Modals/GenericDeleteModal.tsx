@@ -72,7 +72,7 @@ export default function GenericDeleteModal({
                     </h3>
 
                     <p className="text-stone-500 text-sm mb-6">
-                        <span className="font-bold text-stone-800">{entityName}</span> adlı kaydı silmek üzeresiniz.
+                        <span className="font-bold text-stone-800">{entityName}</span> adlı kaydı silmek üzeresiniz. İlişkil tüm veriler de silinecektir.
                         Bu işlem geri alınamaz.
                     </p>
 

@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // useMemo eklendi
 import { UserViewDto, UserFilterDto } from '@/src/types/user';
 import { userService } from '@/src/services/userService';
 import UserDetailModal from '@/src/components/ui/Admin/Modals/UserDetailModal';
 
-// Alt Bileşenler
 import UserStats from '@/src/components/ui/Admin/Users/UserStats';
 import UserFilterBar from '@/src/components/ui/Admin/Users/UserFilterBar';
 import UsersTable from '@/src/components/ui/Admin/Users/UsersTable';
 import PaginationControls from '@/src/components/ui/Admin/Common/PaginationControls';
 
 export default function UsersPage() {
-    // --- STATE ---
     const [users, setUsers] = useState<UserViewDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
@@ -31,7 +29,16 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] = useState<UserViewDto | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-    // --- VERİ ÇEKME ---
+    const stats = useMemo(() => {
+        const penalized = users.filter(u => u.hasFine).length;
+        const activeReaders = users.filter(u => u.loanBookCount > 0).length;
+
+        return {
+            penalizedCount: penalized,
+            activeReaderCount: activeReaders
+        };
+    }, [users]);
+
     const fetchUsers = async (overrideFilters?: any) => {
         setLoading(true);
         try {
@@ -58,10 +65,7 @@ export default function UsersPage() {
 
     useEffect(() => {
         fetchUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
-
-    // --- HANDLERS ---
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -86,7 +90,11 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-8">
-            <UserStats totalCount={totalCount} />
+            <UserStats
+                totalCount={totalCount}
+                penalizedCount={stats.penalizedCount}
+                activeReaderCount={stats.activeReaderCount}
+            />
 
             <UserFilterBar
                 filters={filters}
@@ -108,7 +116,6 @@ export default function UsersPage() {
                 onPageChange={setPage}
             />
 
-            {/* 5. Modal */}
             <UserDetailModal
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
