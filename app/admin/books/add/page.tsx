@@ -151,9 +151,9 @@ export default function AddBookPage() {
         if (!form.publicationYear) {
             newErrors.publicationYear = "Yayın yılı zorunludur.";
         } else if (isNaN(year) || year < 0) {
-            newErrors.publicationYear = "Geçerli bir yıl giriniz (Negatif olamaz).";
-        } else if (year > currentYear + 1) {
-            newErrors.publicationYear = "Gelecekten bir yıl giremezsiniz.";
+            newErrors.publicationYear = "Geçerli bir yıl giriniz.";
+        } else if (year > currentYear) {
+            newErrors.publicationYear = `Yayın yılı ${currentYear}'dan büyük olamaz.`;
         }
 
         const pages = parseInt(form.pageCount);
@@ -190,6 +190,13 @@ export default function AddBookPage() {
                 });
             }
             return;
+        }
+
+        if(name === 'publicationYear') {
+            if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= new Date().getFullYear())) {
+                setForm(prev => ({ ...prev, [name]: value }));
+                return;
+            }
         }
 
         if (name === 'isbn' || name === 'barcodeNumber') {
@@ -346,7 +353,7 @@ export default function AddBookPage() {
                                 {categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
                             </select>
                             {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>}
-                            <div onClick={() => setIsCategoryAddModalOpen(true)} className="mt-1 text-xs text-amber-700 cursor-pointer hover:underline font-medium inline-block">+ Yeni Ekle</div>
+                            <div onClick={() => setIsCategoryAddModalOpen(true)} className="mt-1 text-xs text-amber-700 cursor-pointer hover:underline font-medium inline-block">+ Yeni Kategori Ekle</div>
                         </div>
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yayın Yılı</label>

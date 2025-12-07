@@ -17,7 +17,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
     const defaultEnd = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const [inputBarcode, setInputBarcode] = useState('');
-    const [startDate, setStartDate] = useState(today);
+    const [startDate] = useState(today);
     const [endDate, setEndDate] = useState(defaultEnd);
     const [loading, setLoading] = useState(false);
 
@@ -26,22 +26,19 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
     useEffect(() => {
         if (isOpen) {
             setInputBarcode('');
-            setStartDate(today);
             setEndDate(defaultEnd);
         }
     }, [isOpen, today, defaultEnd]);
 
     useEffect(() => {
-        if (startDate) {
-            const start = new Date(startDate);
-            const maxDate = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
-            setMaxEndDate(maxDate.toISOString().split('T')[0]);
+        const start = new Date(today);
+        const maxDate = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
+        setMaxEndDate(maxDate.toISOString().split('T')[0]);
 
-            if (new Date(endDate) > maxDate) {
-                setEndDate(maxDate.toISOString().split('T')[0]);
-            }
+        if (new Date(endDate) > maxDate) {
+            setEndDate(maxDate.toISOString().split('T')[0]);
         }
-    }, [startDate, endDate]);
+    }, [today, endDate]);
 
     if (!isOpen) return null;
 
@@ -129,11 +126,9 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                         <label className="block text-xs font-bold text-stone-600 mb-1">Başlangıç Tarihi</label>
                         <input
                             type="date"
-                            required
-                            min={today}
+                            readOnly
                             value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full border border-stone-300 text-stone-800 rounded p-2 text-sm focus:border-amber-500 outline-none"
+                            className="w-full border border-stone-300 bg-stone-100 text-stone-500 rounded p-2 text-sm focus:outline-none cursor-not-allowed"
                         />
                     </div>
 
@@ -142,7 +137,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                         <input
                             type="date"
                             required
-                            min={startDate}
+                            min={today}
                             max={maxEndDate}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
@@ -151,7 +146,7 @@ export default function BorrowBookModal({ isOpen, onClose, bookTitle, onSuccess 
                         <p className="text-[10px] text-stone-400 mt-1">En fazla {maxEndDate.split('-').reverse().join('.')} tarihine kadar seçilebilir.</p>
                     </div>
 
-                    {startDate && endDate && new Date(endDate) > new Date(startDate) && (
+                    {endDate && new Date(endDate) > new Date(startDate) && (
                         <div className={`text-xs p-2 rounded border text-center ${
                             Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) > 20
                                 ? 'bg-red-50 text-red-700 border-red-100'

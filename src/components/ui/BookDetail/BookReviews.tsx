@@ -1,118 +1,248 @@
 'use client';
 
-import React, { useState } from 'react';
-import { BookComment } from '@/src/types/book';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/src/hooks/useAuth';
+import { commentService } from '@/src/services/commentService';
+import { BookComment } from '@/src/types/comment';
 
-// Mock Data (Backend bağlanana kadar)
-const MOCK_COMMENTS: BookComment[] = [
-    { id: 1, userName: "Ahmet Yılmaz", content: "Muazzam bir eser, kesinlikle okunmalı. Tarihi detaylar çok iyi işlenmiş.", rating: 5, createdAt: "2024-11-20" },
-    { id: 2, userName: "Ayşe Demir", content: "Biraz ağır ilerliyor ama sonu tatmin edici.", rating: 4, createdAt: "2024-11-18" },
-];
+interface Props {
+    bookId: number;
+}
 
-const BookReviews = ({ bookId }: { bookId: number }) => {
-    const [comments, setComments] = useState<BookComment[]>(MOCK_COMMENTS);
+const BookReviews = ({ bookId }: Props) => {
+    const { user, isAuthenticated } = useAuth();
+
+    // Data States
+    const [comments, setComments] = useState<BookComment[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
+
+    // Pagination States
+    const [page, setPage] = useState(1);
+    const pageSize = 5;
+
     const [newComment, setNewComment] = useState("");
     const [rating, setRating] = useState(5);
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const fetchComments = useCallback(async () => {
+        setLoading(true);
+        try {
+            const result = await commentService.getComments(bookId, page, pageSize);
+            if (result && Array.isArray(result.items)) {
+                setComments(result.items);
+                setTotalCount(result.totalCount || 0);
+            } else {
+                setComments([]);
+                setTotalCount(0);
+            }
+        } catch (error) {
+            console.error("Yorumlar çekilemedi", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [bookId, page]);
+
+    useEffect(() => {
+        fetchComments();
+    }, [fetchComments]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Burada backend'e post isteği atılacak
-        const commentObj: BookComment = {
-            id: Date.now(),
-            userName: "Siz", // Giriş yapmış kullanıcı adı gelecek
-            content: newComment,
-            rating: rating,
-            createdAt: new Date().toISOString().split('T')[0]
-        };
+        if (!isAuthenticated) {
+            toast.error("Yorum yapmak için giriş yapmalısınız.");
+            return;
+        }
+        if (!newComment.trim()) return;
 
-        setComments([commentObj, ...comments]);
-        setNewComment("");
-        setRating(5);
-        alert("Yorumunuz başarıyla eklendi!");
+        setSubmitting(true);
+        const toastId = toast.loading("Yorum gönderiliyor...");
+
+        try {
+            await commentService.addComment({
+                bookId,
+                content: newComment,
+                rating
+            });
+            toast.success("Yorumunuz eklendi!", { id: toastId });
+            setNewComment("");
+            setRating(5);
+            setPage(1);
+            fetchComments();
+        } catch (error: any) {
+            console.error("Yorum eklenemedi", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    // Yıldız render etme yardımcısı
-    const renderStars = (count: number) => {
-        return (
-            <div className="flex text-amber-500 text-sm">
-                {[...Array(5)].map((_, i) => (
-                    <span key={i}>{i < count ? "★" : "☆"}</span>
-                ))}
-            </div>
-        );
+    const handleDelete = async (commentId: number) => {
+        if (!confirm("Bu yorumu silmek istediğinize emin misiniz?")) return;
+
+        const toastId = toast.loading("Yorum Siliniyor...");
+        try {
+            await commentService.deleteComment(commentId);
+            toast.success("Yorum silindi.", { id: toastId });
+            fetchComments();
+        } catch (error: any) {
+            console.error("Yorum silme basarisiz", error.response.data);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
+
+            if (errorMessage) {
+                toast.error(errorMessage, { id: toastId });
+            } else {
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
+            }
+        }
     };
+
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    const renderStars = (count: number) => (
+        <div className="flex text-amber-500 text-sm">
+            {[...Array(5)].map((_, i) => (
+                <span key={i}>{i < count ? "★" : "☆"}</span>
+            ))}
+        </div>
+    );
+
+    const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
     return (
         <div className="bg-white border border-stone-200 rounded-lg p-6 shadow-sm mt-8">
-            <h3 className="font-serif font-bold text-xl text-amber-950 mb-6 border-b border-amber-100 pb-2">
-                Okuyucu Yorumları ({comments.length})
+            <h3 className="font-serif font-bold text-xl text-amber-950 mb-6 border-b border-amber-100 pb-2 flex justify-between items-center">
+                <span>Okuyucu Yorumları</span>
+                <span className="text-xs font-sans font-normal text-stone-500 bg-stone-100 px-2 py-1 rounded-full">Toplam {totalCount} Yorum</span>
             </h3>
 
-            {/* Yorum Listesi */}
             <div className="space-y-6 mb-8">
-                {comments.length === 0 && <p className="text-stone-500 italic">Henüz yorum yapılmamış.</p>}
-
-                {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-4">
-                        {/* Avatar Placeholder */}
-                        <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold shrink-0">
-                            {comment.userName.charAt(0)}
-                        </div>
-
-                        <div className="flex-1">
-                            <div className="flex justify-between items-baseline mb-1">
-                                <h4 className="font-bold text-stone-800 text-sm">{comment.userName}</h4>
-                                <span className="text-xs text-stone-400">{comment.createdAt}</span>
+                {loading ? (
+                    <div className="text-center py-8 text-stone-400 flex flex-col items-center gap-2">
+                        <span className="animate-spin text-2xl">↻</span>
+                        <span>Yükleniyor...</span>
+                    </div>
+                ) : comments.length === 0 ? (
+                    <p className="text-stone-500 italic text-center py-4 bg-stone-50 rounded">Bu kitap için henüz yorum yapılmamış. İlk yorumu sen yap!</p>
+                ) : (
+                    comments.map((comment) => (
+                        <div key={comment.id} className="flex gap-4 group border-b border-stone-50 pb-4 last:border-0">
+                            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold shrink-0 uppercase select-none">
+                                {comment.userFullName ? comment.userFullName.charAt(0) : "U"}
                             </div>
-                            {renderStars(comment.rating)}
-                            <p className="text-stone-600 text-sm mt-1 leading-relaxed">
-                                {comment.content}
-                            </p>
+
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-bold text-stone-800 text-sm">{comment.userFullName || "Anonim"}</h4>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            {renderStars(comment.rating)}
+                                            <span className="text-[10px] text-stone-400">• {formatDate(comment.createdAt)}</span>
+                                        </div>
+                                    </div>
+
+                                    {isAuthenticated && user && (user.id === comment.userId || user.roles.includes('Admin')) && (
+                                        <button
+                                            onClick={() => handleDelete(comment.id)}
+                                            className="text-stone-300 hover:text-red-500 text-xs transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 rounded hover:bg-red-50"
+                                            title="Yorumu Sil"
+                                        >
+                                            🗑️ Sil
+                                        </button>
+                                    )}
+                                </div>
+                                <p className="text-stone-600 text-sm mt-2 leading-relaxed whitespace-pre-wrap">
+                                    {comment.content}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
-            {/* Yorum Yapma Formu */}
-            <div className="bg-stone-50 p-4 rounded-md border border-stone-200">
-                <h4 className="font-serif font-bold text-amber-900 mb-3 text-sm">Yorum Yap</h4>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="block text-xs font-bold text-stone-600 mb-1">Puanınız</label>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => setRating(star)}
-                                    className={`text-2xl transition-colors ${rating >= star ? 'text-amber-500' : 'text-stone-300 hover:text-amber-300'}`}
-                                >
-                                    ★
-                                </button>
-                            ))}
+            {!loading && totalCount > pageSize && (
+                <div className="flex justify-center items-center gap-4 mb-8 pt-4 border-t border-stone-50">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="text-xs font-bold text-stone-500 hover:text-amber-800 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors px-3 py-1 rounded hover:bg-stone-100"
+                    >
+                        ← Önceki
+                    </button>
+                    <span className="text-xs text-stone-400 font-medium">Sayfa {page} / {totalPages}</span>
+                    <button
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                        className="text-xs font-bold text-stone-500 hover:text-amber-800 disabled:opacity-30 disabled:hover:text-stone-500 transition-colors px-3 py-1 rounded hover:bg-stone-100"
+                    >
+                        Sonraki →
+                    </button>
+                </div>
+            )}
+
+            {isAuthenticated ? (
+                <div className="bg-stone-50 p-5 rounded-lg border border-stone-200">
+                    <h4 className="font-serif font-bold text-amber-900 mb-3 text-sm">Yorum Yap</h4>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-3">
+                            <label className="block text-xs font-bold text-stone-600 mb-1">Puanınız</label>
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setRating(star)}
+                                        className={`text-2xl transition-transform active:scale-90 ${rating >= star ? 'text-amber-500' : 'text-stone-300 hover:text-amber-300'}`}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="mb-3">
-                        <textarea
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Kitap hakkında düşünceleriniz..."
-                            className="w-full p-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[80px]"
-                            required
-                        />
-                    </div>
+                        <div className="mb-3">
+                            <textarea
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="Kitap hakkında düşünceleriniz..."
+                                className="w-full p-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
+                                required
+                            />
+                        </div>
 
-                    <div className="text-right">
-                        <button
-                            type="submit"
-                            className="bg-amber-900 hover:bg-amber-800 text-amber-50 px-6 py-2 rounded text-sm font-serif transition-colors shadow-sm"
-                        >
-                            Gönder
-                        </button>
-                    </div>
-                </form>
-            </div>
+                        <div className="text-right">
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="bg-amber-900 hover:bg-amber-800 text-amber-50 px-6 py-2 rounded text-sm font-serif transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? 'Gönderiliyor...' : 'Yorumu Gönder'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            ) : (
+                <div className="bg-stone-50 p-6 rounded-lg border border-stone-200 text-center">
+                    <p className="text-stone-600 text-sm mb-2">Yorum yapabilmek için giriş yapmalısınız.</p>
+                    <a href="/login" className="text-amber-800 font-bold hover:underline text-sm inline-block px-4 py-2 border border-amber-800 rounded hover:bg-amber-800 hover:text-white transition-colors">
+                        Giriş Yap
+                    </a>
+                </div>
+            )}
         </div>
     );
 };
