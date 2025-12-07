@@ -7,6 +7,73 @@ import { commentService } from '@/src/services/commentService';
 import { BookComment } from '@/src/types/comment';
 import GenericConfirmModal from '@/src/components/ui/Admin/Modals/GenericConfirmationModal';
 
+const CommentItem = ({
+                         comment,
+                         user,
+                         isAuthenticated,
+                         onDeleteClick,
+                         renderStars,
+                         formatDate
+                     }: {
+    comment: BookComment,
+    user: any,
+    isAuthenticated: boolean,
+    onDeleteClick: (id: number) => void,
+    renderStars: (rating: number) => React.ReactNode,
+    formatDate: (date?: string) => string
+}) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const MAX_LENGTH = 200;
+
+    const shouldTruncate = comment.content.length > MAX_LENGTH;
+    const displayedContent = isExpanded ? comment.content : comment.content.slice(0, MAX_LENGTH);
+
+    return (
+        <div className="flex gap-4 group border-b border-stone-50 pb-4 last:border-0">
+            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold shrink-0 uppercase select-none">
+                {comment.userFullName ? comment.userFullName.charAt(0) : "U"}
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h4 className="font-bold text-stone-800 text-sm">{comment.userFullName || "Anonim"}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            {renderStars(comment.rating)}
+                            <span className="text-[10px] text-stone-400">• {formatDate(comment.createdAt)}</span>
+                        </div>
+                    </div>
+
+                    {isAuthenticated && user && (user.id === comment.userId || user.roles.includes('Admin')) && (
+                        <button
+                            onClick={() => onDeleteClick(comment.id)}
+                            className="text-stone-300 hover:text-red-500 text-xs transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 rounded hover:bg-red-50 flex items-center gap-1 shrink-0"
+                            title="Yorumu Sil"
+                        >
+                            <span>🗑️</span>
+                            <span className="hidden sm:inline">Sil</span>
+                        </button>
+                    )}
+                </div>
+
+                <div className="text-stone-600 text-sm mt-2 leading-relaxed whitespace-pre-wrap break-words">
+                    {displayedContent}
+                    {!isExpanded && shouldTruncate && "..."}
+                </div>
+
+                {shouldTruncate && (
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-xs font-bold text-amber-700 hover:text-amber-900 mt-1 hover:underline focus:outline-none"
+                    >
+                        {isExpanded ? "Daha Az Göster" : "Devamını Oku"}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
 interface Props {
     bookId: number;
 }
@@ -99,7 +166,7 @@ const BookReviews = ({ bookId }: Props) => {
 
         try {
             await commentService.deleteComment(commentIdToDelete);
-            toast.success("Yorum başarıyla silindi.", {id: toastId});
+            toast.success("Yorum başarıyla silindi.");
             fetchComments();
         } catch (error: any) {
             console.error("Yorum silme basarisiz", error.response.data);
@@ -147,37 +214,15 @@ const BookReviews = ({ bookId }: Props) => {
                     <p className="text-stone-500 italic text-center py-4 bg-stone-50 rounded">Bu kitap için henüz yorum yapılmamış. İlk yorumu sen yap!</p>
                 ) : (
                     comments.map((comment) => (
-                        <div key={comment.id} className="flex gap-4 group border-b border-stone-50 pb-4 last:border-0">
-                            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold shrink-0 uppercase select-none">
-                                {comment.userFullName ? comment.userFullName.charAt(0) : "U"}
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h4 className="font-bold text-stone-800 text-sm">{comment.userFullName || "Anonim"}</h4>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            {renderStars(comment.rating)}
-                                            <span className="text-[10px] text-stone-400">• {formatDate(comment.createdAt)}</span>
-                                        </div>
-                                    </div>
-
-                                    {isAuthenticated && user && (user.id === comment.userId || user.roles.includes('Admin')) && (
-                                        <button
-                                            onClick={() => handleDeleteClick(comment.id)}
-                                            className="text-stone-300 hover:text-red-500 text-xs transition-colors opacity-0 group-hover:opacity-100 px-2 py-1 rounded hover:bg-red-50 flex items-center gap-1"
-                                            title="Yorumu Sil"
-                                        >
-                                            <span>🗑️</span>
-                                            <span className="hidden sm:inline">Sil</span>
-                                        </button>
-                                    )}
-                                </div>
-                                <p className="text-stone-600 text-sm mt-2 leading-relaxed whitespace-pre-wrap">
-                                    {comment.content}
-                                </p>
-                            </div>
-                        </div>
+                        <CommentItem
+                            key={comment.id}
+                            comment={comment}
+                            user={user}
+                            isAuthenticated={isAuthenticated}
+                            onDeleteClick={handleDeleteClick}
+                            renderStars={renderStars}
+                            formatDate={formatDate}
+                        />
                     ))
                 )}
             </div>
@@ -202,6 +247,7 @@ const BookReviews = ({ bookId }: Props) => {
                 </div>
             )}
 
+            {/* Yorum Yapma Formu */}
             {isAuthenticated ? (
                 <div className="bg-stone-50 p-5 rounded-lg border border-stone-200">
                     <h4 className="font-serif font-bold text-amber-900 mb-3 text-sm">Yorum Yap</h4>

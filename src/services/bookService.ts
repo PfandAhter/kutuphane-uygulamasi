@@ -69,32 +69,19 @@ export const bookService = {
     },
 
     createBook: async (dto: CreateBookDto): Promise<CreateBookResponseDto> => {
-        // İstek: POST /api/book/add
         const response = await axiosInstance.post(`${API_ROUTE_BASE}/create`, dto, {
-            baseURL: '' // Proxy'ye yönlendir
+            baseURL: ''
         });
         return response.data;
     },
 
     updateBook: async (id: number, dto: UpdateBookDto): Promise<void> => {
-        // Backend: PUT /api/Book/{id}
-        // Proxy: PUT /api/book/update?id={id}
         await axiosInstance.put(`${API_ROUTE_BASE}/update?id=${id}`, dto, { baseURL: '' });
     },
 
     deleteBook: async (id: number): Promise<void> => {
-        // Backend: DELETE /api/Book/{id}
-        // Proxy: DELETE /api/book/delete?id={id}
         await axiosInstance.delete(`${API_ROUTE_BASE}/delete?id=${id}`, { baseURL: '' });
     },
-
-    /*async getBookById(id: number): Promise<Book> {
-        const response = await fetch(`${API_BASE_URL}/Book/get-book/${id}`);
-        if (!response.ok) {
-            throw new Error("Failed to fetch book");
-        }
-        return response.json();
-    },*/
 
     async getBookDetails(id: number): Promise<BookDetail> {
         const url = `${API_ROUTE_BASE}/get-book-details?id=${id}`;
@@ -120,7 +107,7 @@ export const bookService = {
         const data = await response.json();
 
         if (!response.ok) return [];
-        return data;
-        //return data.items.filter((b: any) => b.id !== currentBookId); //TODO: Bunu duzelticez.
+        //return data;
+        return data.items.filter((b: any) => b.id !== currentBookId); //TODO: Bunu duzelticez.
     }
 };
