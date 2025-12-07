@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         const authHeader = request.headers.get("Authorization");
 
         console.log("Proxy POST /api/comments/create called");
-        const response = await axios.post(`${API_BACKEND_URL}/api/Comments/Add`, body, {
+        const response = await axios.post(`${API_BACKEND_URL}/api/BookComment/add-comment`, body, {
             headers: {
                 "Content-Type": "application/json",
                 ...(authHeader && { "Authorization": authHeader })

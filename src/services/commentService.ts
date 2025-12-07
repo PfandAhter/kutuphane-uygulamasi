@@ -12,7 +12,7 @@ export const commentService = {
     },
 
     addComment: async (dto: CreateCommentDto): Promise<BookComment> => {
-        const response = await axiosInstance.post(`${API_ROUTE_BASE}/add`, dto);
+        const response = await axiosInstance.post(`${API_ROUTE_BASE}/create`, dto);
         return response.data;
     },
 

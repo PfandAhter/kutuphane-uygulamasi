@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         }
         console.log("Proxy GET /api/comments/list called with BookId:", bookId, "Page:", page, "Size:", size);
 
-        const response = await axios.get(`${API_BACKEND_URL}/api/Comments/GetByBookId`, {
+        const response = await axios.get(`${API_BACKEND_URL}/api/BookComment/get-comments`, {
             params: { BookId: bookId, Page: page, Size: size }
         });
         console.log("Proxy GET /api/comments/list response status:", response.status);
