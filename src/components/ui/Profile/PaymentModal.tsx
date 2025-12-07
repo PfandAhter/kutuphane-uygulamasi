@@ -23,8 +23,10 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
 
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const [receiptId, setReceiptId] = useState("");
-
     const [simulatingPayment, setSimulatingPayment] = useState(false);
+
+    const [snapshotFine, setSnapshotFine] = useState<UserFineDto | null>(null);
+
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
@@ -35,16 +37,22 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
             setCvc('');
             setFocusedField(null);
             setSimulatingPayment(false);
+            setPaymentSuccess(false);
+            setSnapshotFine(null);
         }
     }, [isOpen]);
 
-    if (!isOpen || !fine) return null;
+    if (!isOpen || (!fine && !paymentSuccess)) return null;
+
+    const displayFine = paymentSuccess ? snapshotFine : fine;
+    if (!displayFine) return null;
 
     const isLoading = apiLoading || simulatingPayment;
 
+    // --- INPUT HANDLERS (Aynı) ---
     const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let val = e.target.value.replace(/\D/g, '');
-        val = val.substring(0, 16); // Max 16 hane
+        val = val.substring(0, 16);
         setCardNumber(val);
     };
 
@@ -75,18 +83,22 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
             toast.error("Lütfen kart bilgilerini eksiksiz giriniz.");
             return;
         }
+
+        setSnapshotFine(fine);
         setSimulatingPayment(true);
 
         await new Promise(resolve => setTimeout(resolve, 3500));
+
         const generatedReceiptId = Math.floor(100000 + Math.random() * 900000).toString();
         setReceiptId(generatedReceiptId);
 
         onConfirm();
+
         setSimulatingPayment(false);
         setPaymentSuccess(true);
     };
 
-    if (paymentSuccess) {
+    if (paymentSuccess && displayFine) {
         return (
             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-8 text-center border border-stone-200" onClick={e => e.stopPropagation()}>
@@ -97,9 +109,8 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
                     <p className="text-stone-500 text-sm mb-8">Borcunuz başarıyla tahsil edilmiştir.</p>
 
                     <div className="space-y-3">
-                        {/* PDF İndirme Butonu */}
                         <PDFDownloadLink
-                            document={<PaymentReceiptPdf fine={fine} userName={cardName} paymentId={receiptId} />}
+                            document={<PaymentReceiptPdf fine={displayFine} userName={cardName} paymentId={receiptId} />}
                             fileName={`Dekont-${receiptId}.pdf`}
                             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-lg font-bold transition-colors shadow-md"
                         >
@@ -133,6 +144,7 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
                         <p className="text-stone-700 font-medium animate-pulse">Ödeme İşleniyor...</p>
                     </div>
                 )}
+
                 <div className="text-center mb-8">
                     <h3 className="font-serif font-bold text-2xl text-amber-950">Güvenli Ödeme</h3>
                     <p className="text-stone-500 text-sm mt-1">Borç kapama işlemi için kart bilgilerinizi giriniz.</p>
@@ -146,9 +158,10 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
                     focusedField={focusedField}
                 />
 
+                {/* Tutar */}
                 <div className="bg-stone-50 p-4 rounded-lg border border-stone-100 mb-6 flex justify-between items-center">
                     <span className="text-stone-600 font-medium">Ödenecek Tutar:</span>
-                    <span className="text-2xl font-mono font-bold text-green-700">{fine.amount.toFixed(2)} ₺</span>
+                    <span className="text-2xl font-mono font-bold text-green-700">{displayFine.amount.toFixed(2)} ₺</span>
                 </div>
 
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
@@ -235,7 +248,7 @@ export default function PaymentModal({ isOpen, onClose, onConfirm, fine, loading
                             disabled={isLoading}
                             className="flex-[2] px-6 py-3 text-sm bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 shadow-lg shadow-green-600/20 disabled:opacity-70 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
                         >
-                            {isLoading ? 'İşleniyor...' : `₺${fine.amount.toFixed(2)} Öde`}
+                            {isLoading ? 'İşleniyor...' : `₺${displayFine.amount.toFixed(2)} Öde`}
                         </button>
                     </div>
                 </form>
