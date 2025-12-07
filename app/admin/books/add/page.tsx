@@ -151,9 +151,9 @@ export default function AddBookPage() {
         if (!form.publicationYear) {
             newErrors.publicationYear = "Yayın yılı zorunludur.";
         } else if (isNaN(year) || year < 0) {
-            newErrors.publicationYear = "Geçerli bir yıl giriniz.";
-        } else if (year > currentYear) {
-            newErrors.publicationYear = `Yayın yılı ${currentYear}'dan büyük olamaz.`;
+            newErrors.publicationYear = "Geçerli bir yıl giriniz (Negatif olamaz).";
+        } else if (year > currentYear + 1) {
+            newErrors.publicationYear = "Gelecekten bir yıl giremezsiniz.";
         }
 
         const pages = parseInt(form.pageCount);
@@ -192,19 +192,8 @@ export default function AddBookPage() {
             return;
         }
 
-        if(name === 'publicationYear') {
-            if (value === '' || (/^\d+$/.test(value) && parseInt(value) <= new Date().getFullYear())) {
-                setForm(prev => ({ ...prev, [name]: value }));
-                return;
-            }
-        }
-
         if (name === 'isbn' || name === 'barcodeNumber') {
             if (value !== '' && !/^\d+$/.test(value)) return;
-        }
-
-        if (name === 'summary') {
-            if (value.length > 300) return;
         }
 
         if (errors[name]) {
@@ -353,7 +342,7 @@ export default function AddBookPage() {
                                 {categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
                             </select>
                             {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>}
-                            <div onClick={() => setIsCategoryAddModalOpen(true)} className="mt-1 text-xs text-amber-700 cursor-pointer hover:underline font-medium inline-block">+ Yeni Kategori Ekle</div>
+                            <div onClick={() => setIsCategoryAddModalOpen(true)} className="mt-1 text-xs text-amber-700 cursor-pointer hover:underline font-medium inline-block">+ Yeni Ekle</div>
                         </div>
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yayın Yılı</label>
@@ -409,18 +398,14 @@ export default function AddBookPage() {
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <label className="block text-sm font-bold text-stone-700">Kitap Özeti</label>
-                            <span className={`text-xs font-medium ${form.summary.length >= 300 ? 'text-red-500' : 'text-stone-400'}`}>
-                                {form.summary.length}/300
-                            </span>
                         </div>
                         <textarea
                             name="summary"
                             value={form.summary}
                             onChange={handleChange}
                             rows={4}
-                            maxLength={300}
-                            placeholder="Kitap hakkında kısa bir özet giriniz (Maks. 300 karakter)..."
-                            className="w-full border border-stone-300 rounded-md p-3 text-sm text-black focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all resize-none"
+                            placeholder="Kitap hakkında bir özet giriniz..."
+                            className="w-full border border-stone-300 rounded-md p-3 text-sm text-black focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all resize-y"
                         />
                     </div>
 
