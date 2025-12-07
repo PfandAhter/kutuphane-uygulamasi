@@ -1,6 +1,8 @@
 'use client';
 import React from 'react';
 import { UserFineDto } from '@/src/types/user';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PaymentReceiptPdf } from '@/src/components/ui/Pdf/PaymentReceipt';
 
 interface Props {
     fines: UserFineDto[];
@@ -44,18 +46,17 @@ export default function FineListTable({ fines, loading, isHistory, onPayClick }:
                     <th className="px-6 py-4 w-1/5">Tarih</th>
                     <th className="px-6 py-4 text-right w-1/5">Tutar</th>
                     <th className="px-6 py-4 text-center w-1/5">Durum</th>
-                    {!isHistory && <th className="px-6 py-4 text-right w-1/6">İşlem</th>}
+                    <th className="px-6 py-4 text-right w-1/6">İşlem</th>
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100 bg-white">
                 {fines.map((fine) => {
-                    // Kalıcı Yasak kontrolü (Case insensitive)
                     const isBan = fine.fineType.toLowerCase().includes('yasak') || fine.fineType.toLowerCase().includes('ban');
 
+                    const paymentId = `TR-${fine.fineId}-${new Date().getFullYear()}`;
                     return (
                         <tr key={fine.fineId} className={`group transition-all hover:bg-amber-50/40 ${isBan ? 'bg-red-50/10' : ''}`}>
 
-                            {/* Ceza Tipi */}
                             <td className="px-6 py-4 align-top">
                                 <span className={`font-bold block mb-1 ${isBan ? 'text-red-700' : 'text-stone-700'}`}>
                                     {fine.fineType}
@@ -63,7 +64,6 @@ export default function FineListTable({ fines, loading, isHistory, onPayClick }:
                                 {isBan && <span className="text-[10px] text-red-500 uppercase font-bold border border-red-200 px-1.5 py-0.5 rounded bg-white">Kritik</span>}
                             </td>
 
-                            {/* Açıklama */}
                             <td className="px-6 py-4 align-top">
                                 {fine.loanDetails ? (
                                     <div className="flex flex-col gap-1">
@@ -81,19 +81,16 @@ export default function FineListTable({ fines, loading, isHistory, onPayClick }:
                                 )}
                             </td>
 
-                            {/* Tarih */}
                             <td className="px-6 py-4 align-top text-stone-500 font-medium">
                                 {formatDate(fine.issuedDate)}
                             </td>
 
-                            {/* Tutar */}
                             <td className="px-6 py-4 align-top text-right">
                                 <span className={`font-mono font-bold text-lg ${fine.amount > 0 ? 'text-stone-800' : 'text-stone-400'}`}>
                                     {fine.amount > 0 ? `${fine.amount} ₺` : '-'}
                                 </span>
                             </td>
 
-                            {/* Durum */}
                             <td className="px-6 py-4 align-top text-center">
                                 {isHistory ? (
                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
@@ -108,10 +105,23 @@ export default function FineListTable({ fines, loading, isHistory, onPayClick }:
                                 )}
                             </td>
 
-                            {/* İşlem Butonu (Sadece Aktif Sekmede) */}
-                            {!isHistory && (
-                                <td className="px-6 py-4 align-top text-right">
-                                    {isBan ? (
+                            <td className="px-6 py-4 align-top text-right">
+                                {isHistory ? (
+                                    <PDFDownloadLink
+                                        document={<PaymentReceiptPdf fine={fine} userName="Sayın Üye" paymentId={paymentId} />}
+                                        fileName={`Dekont-${fine.fineId}.pdf`}
+                                        className="inline-flex items-center gap-1 bg-stone-100 hover:bg-stone-200 text-stone-600 border border-stone-300 px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
+                                    >
+                                        {({ loading }) => (
+                                            loading ? 'Hazırlanıyor...' : (
+                                                <>
+                                                    <span>📄</span> Dekont
+                                                </>
+                                            )
+                                        )}
+                                    </PDFDownloadLink>
+                                ) : (
+                                    isBan ? (
                                         <span className="text-[10px] text-stone-400 italic block mt-2 select-none">
                                             Yetkili İşlemi
                                         </span>
@@ -124,9 +134,9 @@ export default function FineListTable({ fines, loading, isHistory, onPayClick }:
                                                 <span>💸</span> Öde
                                             </button>
                                         )
-                                    )}
-                                </td>
-                            )}
+                                    )
+                                )}
+                            </td>
                         </tr>
                     );
                 })}

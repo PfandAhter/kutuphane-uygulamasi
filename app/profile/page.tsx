@@ -4,10 +4,9 @@ import React, { useEffect, useState, Suspense } from 'react';
 import Header from "@/src/components/ui/Header";
 import { useAuth } from "@/src/hooks/useAuth";
 import { userService } from '@/src/services/userService';
-import { UserStats, MyFineDto, UserFineDto } from '@/src/types/user';
+import { UserStats, UserFineDto } from '@/src/types/user';
 import toast from 'react-hot-toast';
 
-// Bileşenler
 import ProfileSidebar from '@/src/components/ui/Profile/ProfileSidebar';
 import ActiveLoans from '@/src/components/ui/Profile/ActiveLoans';
 import PastLoans from '@/src/components/ui/Profile/PastLoans';
@@ -23,7 +22,6 @@ const TABS = {
     PAST_FINES: 'past_fines'
 };
 
-// --- İÇERİK BİLEŞENİ (ASIL SAYFA MANTIĞI BURADA) ---
 function ProfileContent() {
     const { user } = useAuth();
 
@@ -37,26 +35,22 @@ function ProfileContent() {
     const [fines, setFines] = useState<UserFineDto[]>([]);
     const [finesLoading, setFinesLoading] = useState(false);
 
-    // Payment Modal State
     const [selectedFine, setSelectedFine] = useState<UserFineDto | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
 
-    // Tab değişince sayfayı sıfırla
     useEffect(() => {
         setPage(1);
         setTotalCount(0);
         setFines([]);
     }, [activeTab]);
 
-    // Veri Çekme Tetikleyicisi
     useEffect(() => {
         if (activeTab === TABS.ACTIVE_FINES || activeTab === TABS.PAST_FINES) {
             fetchFinesData();
         }
     }, [activeTab, page]);
 
-    // İstatistikleri Çek
     useEffect(() => {
         fetchStats();
     }, []);
@@ -108,30 +102,27 @@ function ProfileContent() {
 
     const handleConfirmPayment = async () => {
         if (!selectedFine) return;
+
         setPaymentLoading(true);
         const toastId = toast.loading("Ödeme işlemi yapılıyor...");
         try {
             await fineService.payFine(selectedFine.fineId.toString());
-            toast.success("Ödeme başarıyla alındı." , { id: toastId });
-            setIsPaymentModalOpen(false);
-            setSelectedFine(null);
+            toast.success("Ödeme başarıyla alındı.", { id: toastId });
 
             fetchFinesData();
             fetchStats();
-        } catch (error:any) {
+        } catch (error: any) {
             console.error("Ödeme işlemi başarısız.");
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
-
-            if (errorMessage) {
-                toast.error(errorMessage, { id: toastId });
-            } else {
-                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
-            }
+            const errorMessage = error.response?.data?.message || "İşlem başarısız.";
+            toast.error(errorMessage, { id: toastId });
         } finally {
             setPaymentLoading(false);
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsPaymentModalOpen(false);
+        setTimeout(() => setSelectedFine(null), 300);
     };
 
     return (
@@ -191,7 +182,7 @@ function ProfileContent() {
 
             <PaymentModal
                 isOpen={isPaymentModalOpen}
-                onClose={() => setIsPaymentModalOpen(false)}
+                onClose={handleCloseModal}
                 onConfirm={handleConfirmPayment}
                 fine={selectedFine}
                 loading={paymentLoading}
