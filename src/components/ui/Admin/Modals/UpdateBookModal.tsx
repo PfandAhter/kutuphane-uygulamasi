@@ -18,7 +18,9 @@ interface Props {
 }
 
 const DEFAULT_BOOK_IMAGE = "https://i.ibb.co/F47gc8Xk/unnamed.jpg";
+
 export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Props) {
+
     const getInitialAuthorId = (b: Book | null): number => {
         if (b?.bookAuthors && b.bookAuthors.length > 0) {
             return b.bookAuthors[0].authorId;
@@ -36,7 +38,7 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
         publisherId: book?.publisherId || 0,
         categoryId: book?.categoryId || 0,
         imageUrl: book?.imageUrl || DEFAULT_BOOK_IMAGE,
-        summary: book?.summary || '',
+        summary: book?.summary || ''
     });
 
     const [authors, setAuthors] = useState<Author[]>([]);
@@ -44,7 +46,6 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // Dropdown verilerini çek (Sadece ilk açılışta)
     useEffect(() => {
         if (isOpen) {
             Promise.all([
@@ -75,8 +76,8 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                 authorId: currentAuthorId,
                 publisherId: book.publisherId,
                 categoryId: book.categoryId,
-                imageUrl: book.imageUrl,
-                summary: book.summary,
+                imageUrl: book.imageUrl || DEFAULT_BOOK_IMAGE,
+                summary: book.summary || ''
             });
         }
     }, [book]);
@@ -85,6 +86,20 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+
+        if (name === 'isbn') {
+            if (value !== '' && !/^\d+$/.test(value)) return;
+        }
+
+        if (name === 'publicationYear') {
+            if (value === '' || (/^\d+$/.test(value) && parseInt(value, 10) <= new Date().getFullYear())) {
+                setForm(prev => ({ ...prev, publicationYear: value === '' ? undefined : parseInt(value, 10) }));
+                return;
+            } else {
+                return;
+            }
+        }
+
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
@@ -109,7 +124,7 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                 publisherId: Number(form.publisherId),
                 categoryId: Number(form.categoryId),
                 imageUrl: finalImageUrl,
-                summary: form.summary!,
+                summary: form.summary!
             };
 
             await bookService.updateBook(book.id, dto);
@@ -117,17 +132,8 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
             toast.success("Kitap güncellendi!", { id: toastId });
             onSuccess();
             onClose();
-        } catch (error:any) {
-            console.error("Kitap Guncelleme hatasi: ", error.response.data);
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
-
-            if (errorMessage) {
-                toast.error(errorMessage, { id: toastId });
-            } else {
-                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
-            }
+        } catch (error) {
+            toast.error("Güncelleme hatası", { id: toastId });
         } finally {
             setLoading(false);
         }
@@ -151,7 +157,16 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-stone-600 block mb-1">ISBN</label>
-                                <input type="text" name="isbn" value={form.isbn || ''} onChange={handleChange} className={inputClass} />
+                                <input
+                                    type="text"
+                                    name="isbn"
+                                    inputMode="numeric"
+                                    maxLength={13}
+                                    value={form.isbn || ''}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                    placeholder="Sadece rakam"
+                                />
                             </div>
                         </div>
 
@@ -182,7 +197,13 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="text-xs font-bold text-stone-600 block mb-1">Yıl</label>
-                                <input type="number" name="publicationYear" value={form.publicationYear || ''} onChange={handleChange} className={inputClass} />
+                                <input
+                                    type="number"
+                                    name="publicationYear"
+                                    value={form.publicationYear || ''}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-stone-600 block mb-1">Sayfa Sayısı</label>
@@ -227,17 +248,13 @@ export default function UpdateBookModal({ isOpen, onClose, book, onSuccess }: Pr
                         <div>
                             <div className="flex justify-between items-center mb-1">
                                 <label className="text-xs font-bold text-stone-600">Kitap Özeti</label>
-                                <span className={`text-[10px] ${form.summary && form.summary.length > 300 ? 'text-red-500' : 'text-stone-400'}`}>
-                                    {form.summary ? form.summary.length : 0}/300
-                                </span>
                             </div>
                             <textarea
                                 name="summary"
                                 rows={4}
-                                maxLength={300}
                                 value={form.summary || ''}
                                 onChange={handleChange}
-                                className={`${inputClass} resize-none`}
+                                className={`${inputClass} resize-y`}
                                 placeholder="Kitap özeti..."
                             />
                         </div>

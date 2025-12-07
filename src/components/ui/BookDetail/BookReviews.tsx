@@ -81,6 +81,8 @@ interface Props {
 const BookReviews = ({ bookId }: Props) => {
     const { user, isAuthenticated } = useAuth();
 
+    const MAX_COMMENT_LENGTH = 400;
+
     const [comments, setComments] = useState<BookComment[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
@@ -166,7 +168,7 @@ const BookReviews = ({ bookId }: Props) => {
 
         try {
             await commentService.deleteComment(commentIdToDelete);
-            toast.success("Yorum başarıyla silindi.",{ id: toastId });
+            toast.success("Yorum başarıyla silindi.", { id: toastId });
             fetchComments();
         } catch (error: any) {
             console.error("Yorum silme basarisiz", error.response.data);
@@ -175,9 +177,9 @@ const BookReviews = ({ bookId }: Props) => {
                 (typeof error.response?.data === 'string' ? error.response?.data : "İşlem başarısız.");
 
             if (errorMessage) {
-                toast.error(errorMessage, {id: toastId});
+                toast.error(errorMessage, { id: toastId });
             } else {
-                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", {id: toastId});
+                toast.error("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", { id: toastId });
             }
         }
     };
@@ -247,7 +249,6 @@ const BookReviews = ({ bookId }: Props) => {
                 </div>
             )}
 
-            {/* Yorum Yapma Formu */}
             {isAuthenticated ? (
                 <div className="bg-stone-50 p-5 rounded-lg border border-stone-200">
                     <h4 className="font-serif font-bold text-amber-900 mb-3 text-sm">Yorum Yap</h4>
@@ -269,9 +270,17 @@ const BookReviews = ({ bookId }: Props) => {
                         </div>
 
                         <div className="mb-3">
+                            <div className="flex justify-between items-end mb-1 px-1">
+                                <label className="text-xs font-semibold text-stone-500">Yorumunuz</label>
+                                <span className={`text-[10px] font-medium transition-colors ${newComment.length >= MAX_COMMENT_LENGTH ? 'text-red-600 font-bold' : 'text-stone-400'}`}>
+                                    {newComment.length} / {MAX_COMMENT_LENGTH}
+                                </span>
+                            </div>
+
                             <textarea
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
+                                maxLength={MAX_COMMENT_LENGTH} // Karakter sınırı
                                 placeholder="Kitap hakkında düşünceleriniz..."
                                 className="w-full p-3 border border-stone-300 rounded text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 min-h-[100px] text-black bg-white placeholder:text-stone-400 resize-y"
                                 required
