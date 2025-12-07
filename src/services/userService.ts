@@ -25,7 +25,6 @@ export const userService = {
         params.append("Page", filter.page.toString());
         params.append("Size", filter.size.toString());
 
-        // Proxy Route'a istek (baseURL: '' önemli)
         const response = await axiosInstance.get(`${API_ROUTE_BASE}/list?${params.toString()}`, {
             baseURL: ''
         });

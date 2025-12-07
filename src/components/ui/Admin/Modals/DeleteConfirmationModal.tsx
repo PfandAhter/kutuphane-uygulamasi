@@ -13,7 +13,6 @@ interface Props {
 }
 
 
-//TODO: GenericDeleteModal olarak değiştirilebilir
 export default function DeleteConfirmationModal({ isOpen, onClose, bookId, bookTitle, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
 
@@ -50,7 +49,7 @@ export default function DeleteConfirmationModal({ isOpen, onClose, bookId, bookT
                     <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚠️</div>
                     <h3 className="font-bold text-lg text-stone-800 mb-2">Emin misiniz?</h3>
                     <p className="text-stone-500 text-sm mb-6">
-                        <span className="font-bold text-stone-800">{bookTitle}</span> adlı kitabı silmek üzeresiniz. Bu işlem geri alınamaz.
+                        <span className="font-bold text-stone-800">{bookTitle}</span> adlı kitabı silmek üzeresiniz. Tüm kitap kopyaları da silinecektir. Bu işlem geri alınamaz.
                     </p>
 
                     <div className="flex justify-center gap-3">
