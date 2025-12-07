@@ -166,7 +166,7 @@ const BookReviews = ({ bookId }: Props) => {
 
         try {
             await commentService.deleteComment(commentIdToDelete);
-            toast.success("Yorum başarıyla silindi.");
+            toast.success("Yorum başarıyla silindi.",{ id: toastId });
             fetchComments();
         } catch (error: any) {
             console.error("Yorum silme basarisiz", error.response.data);
