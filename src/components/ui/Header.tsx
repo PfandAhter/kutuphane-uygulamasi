@@ -28,7 +28,6 @@ const Header = () => {
         <header className="bg-amber-950 text-amber-50 shadow-lg py-4 border-b-4 border-amber-900 sticky top-0 z-50">
             <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
 
-                {/* Logo Alanı */}
                 <div
                     className="text-2xl font-serif font-bold tracking-wide cursor-pointer flex items-center gap-2 shrink-0"
                     onClick={() => router.push('/')}
@@ -37,11 +36,10 @@ const Header = () => {
                     <span className="text-amber-500 font-extrabold">App</span>
                 </div>
 
-                {/* Arama Kutusu */}
                 <div className="flex-1 w-full max-w-2xl flex shadow-inner">
                     <input
                         type="text"
-                        placeholder="Eser adı, yazar veya ISBN..."
+                        placeholder="Eser adı ile ara..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -54,14 +52,10 @@ const Header = () => {
                     </button>
                 </div>
 
-                {/* Sağ Menü (Dinamik) */}
                 <div className="hidden md:flex items-center gap-4 text-sm font-medium shrink-0">
                     {isAuthenticated && user ? (
-                        // --- Giriş Yapmış Kullanıcı Görünümü ---
                         <div className="flex items-center gap-4">
 
-                            {/* --- ADMIN BUTONU (Sadece Admin ise görünür) --- */}
-                            {/* Not: Backend'den gelen rol ismi tam olarak 'Admin' mi kontrol edin */}
                             {(Array.isArray(user.roles) ? user.roles.includes('Admin') : user.roles === 'Admin') && (
                                 <button
                                     onClick={() => router.push('/admin')}
@@ -96,7 +90,6 @@ const Header = () => {
                             </button>
                         </div>
                     ) : (
-                        // --- Misafir Görünümü ---
                         <>
                             <button
                                 onClick={() => router.push('/login')}

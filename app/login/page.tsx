@@ -13,8 +13,9 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+
+        if (e) e.preventDefault();
         setError('');
         setLoading(true);
         const toastId = toast.loading("Giriş işlemi yapılıyor.");
@@ -60,7 +61,7 @@ export default function LoginPage() {
                     </a>
                     .
                 </p>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form className="space-y-4">
                     <div className="mt-2">
                         <label className="block text-sm font-semibold text-[#4a2f1c] mb-1">
                             E-posta
@@ -88,7 +89,8 @@ export default function LoginPage() {
                         />
                     </div>
                     <button
-                        type="submit"
+                        type="button"
+                        onClick={handleSubmit}
                         disabled={loading}
                         className="w-full inline-flex justify-center items-center rounded-md bg-[#7a4c24] px-4 py-2 text-sm font-semibold text-[#fdf3e6] hover:bg-[#5f391b] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >

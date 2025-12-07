@@ -9,7 +9,6 @@ import toast from "react-hot-toast";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper: Başlangıç tokenını al (Server-Client uyumsuzluğunu önlemek için sadece client'ta çalışır)
 const getStoredToken = (): string | null => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem("token");
@@ -18,15 +17,12 @@ const getStoredToken = (): string | null => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    // 1. State'leri boş başlatıyoruz (Hydration Error önlemek için)
     const [user, setUser] = useState<UserProfile | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
-    // 2. KRİTİK: Başlangıçta loading TRUE olmalı. Yoksa veri okunmadan sayfadan atar.
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // 3. Sayfa yüklendiğinde (Mount) LocalStorage'ı oku
     useEffect(() => {
         const initializeAuth = () => {
             if (typeof window !== 'undefined') {
@@ -34,7 +30,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const storedRefreshToken = localStorage.getItem("refreshToken");
                 const storedUserProfile = localStorage.getItem("userProfile");
 
-                // Token ve Profil varsa state'i doldur
                 if (storedToken && storedUserProfile) {
                     try {
                         const parsedUser = JSON.parse(storedUserProfile);
@@ -47,7 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                 }
             }
-            // İşlem bitti, yükleme durumunu kapat
             setIsLoading(false);
         };
 
@@ -59,24 +53,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsLoading(true);
             const response: AuthResponse = await authService.login(dto);
 
-            // Önce Token'ı kaydet (UserService token kullanıyor olabilir)
             localStorage.setItem("token", response.token);
             localStorage.setItem("refreshToken", response.refreshToken);
 
-            // Sonra kullanıcı bilgisini çek
             const userProfileDetails: UserProfile = await userService.getUserInfo();
             localStorage.setItem("userProfile", JSON.stringify(userProfileDetails));
 
-            // State'leri güncelle
             setRefreshToken(response.refreshToken);
             setToken(response.token);
             setUser(userProfileDetails);
-        } catch (error:any) {
-            console.error("Login error:", error);
-            // Hata durumunda yarım kalmış verileri temizle
-            localStorage.removeItem("token");
-            localStorage.removeItem("refreshToken");
-            throw error;
+        } catch (error: any) {
+            console.error("Giriş İşlemi Başarısız: ", error);
+
+            let errorMessage = "İşlem başarısız.";
+
+            if (error.response && error.response.data) {
+                errorMessage = error.response.data.message ||
+                    error.response.data.error ||
+                    (typeof error.response.data === 'string' ? error.response.data : "İşlem başarısız.");
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            toast.error(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -101,7 +100,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(null);
         setRefreshToken(null);
         setUser(null);
-        // İsteğe bağlı: Router ile login sayfasına yönlendirilebilir
     };
 
     const userId = user?.id ?? null;

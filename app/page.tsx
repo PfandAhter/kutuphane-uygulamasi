@@ -45,15 +45,12 @@ function HomeContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // --- Data Fetching ---
     useEffect(() => {
-        // URL'den tüm filtre parametrelerini alıyoruz
         const filter: BookFilterDto = {
             page: page,
             size: size,
             title: (searchParams?.get("title") as string) || undefined,
 
-            // Yeni Filtreler
             categoryId: searchParams?.get("categoryId") ? parseInt(searchParams.get("categoryId") as string) : undefined,
             authorId: searchParams?.get("authorId") ? parseInt(searchParams.get("authorId") as string) : undefined,
             publisherId: searchParams?.get("publisherId") ? parseInt(searchParams.get("publisherId") as string) : undefined,

@@ -46,7 +46,7 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
 
             if (isRefreshing) {
-                return new Promise(function(resolve, reject) {
+                return new Promise(function (resolve, reject) {
                     failedQueue.push({resolve, reject});
                 }).then((token) => {
                     originalRequest.headers['Authorization'] = 'Bearer ' + token;
@@ -70,7 +70,7 @@ axiosInstance.interceptors.response.use(
                     refreshToken: refreshToken,
                     token: token
                 });
-                const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
+                const {token: newAccessToken, refreshToken: newRefreshToken} = response.data;
                 localStorage.setItem('token', newAccessToken);
                 if (newRefreshToken) {
                     localStorage.setItem('refreshToken', newRefreshToken);
