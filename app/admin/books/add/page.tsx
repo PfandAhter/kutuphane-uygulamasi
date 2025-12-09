@@ -278,7 +278,7 @@ export default function AddBookPage() {
     `;
 
     return (
-        <div className="max-w-4xl mx-auto pb-10">
+        <div className="max-w-4xl mx-auto pb-10 px-4 md:px-0">
             <div className="mb-6">
                 <button
                     onClick={() => router.back()}
@@ -286,11 +286,11 @@ export default function AddBookPage() {
                 >
                     ← Listeye Dön
                 </button>
-                <h1 className="text-2xl font-bold text-stone-800 font-serif">Yeni Kitap Kaydı</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Yeni Kitap Kaydı</h1>
                 <p className="text-stone-500 text-sm">Kütüphane envanterine yeni bir kitap ekleyin.</p>
             </div>
 
-            <div className="bg-white border border-stone-200 rounded-lg shadow-sm p-8 relative">
+            <div className="bg-white border border-stone-200 rounded-lg shadow-sm p-4 md:p-8 relative"> {/* Mobilde padding azaltıldı */}
 
                 {loadingInitial && (
                     <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
@@ -300,7 +300,7 @@ export default function AddBookPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Kitap Adı <span className="text-red-500">*</span></label>
                             <input name="title" type="text" value={form.title} onChange={handleChange} className={getInputClass('title')} placeholder="Örn: Nutuk" />
@@ -313,7 +313,7 @@ export default function AddBookPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Yazar <span className="text-red-500">*</span></label>
                             <select name="authorId" value={form.authorId} onChange={handleChange} className={`${getInputClass('authorId')} bg-white`}>
@@ -334,7 +334,7 @@ export default function AddBookPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Kategori <span className="text-red-500">*</span></label>
                             <select name="categoryId" value={form.categoryId} onChange={handleChange} className={getInputClass('categoryId')}>
@@ -365,7 +365,7 @@ export default function AddBookPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-6 items-start">
                         <div className="w-full">
                             <label className="block text-sm font-bold text-stone-700 mb-2">Kapak Resmi URL</label>
                             <input
@@ -379,15 +379,13 @@ export default function AddBookPage() {
                             <p className="text-xs text-stone-400 mt-1">Görselin doğrudan bağlantısını (URL) yapıştırınız.</p>
                         </div>
 
-                        <div className="w-24 h-36 bg-stone-100 border border-stone-200 rounded-md flex items-center justify-center overflow-hidden shrink-0 mt-1">
+                        <div className="w-24 h-36 bg-stone-100 border border-stone-200 rounded-md flex items-center justify-center overflow-hidden shrink-0 mt-1 mx-auto md:mx-0">
                             {form.imageUrl ? (
                                 <img
                                     src={form.imageUrl}
                                     alt="Önizleme"
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = DEFAULT_BOOK_IMAGE;
-                                    }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_BOOK_IMAGE; }}
                                 />
                             ) : (
                                 <span className="text-stone-400 text-xs text-center px-1">Görsel Yok</span>
@@ -410,7 +408,7 @@ export default function AddBookPage() {
                     </div>
 
                     <div className={`border rounded-md transition-colors duration-200 ${form.addCopy ? 'border-amber-200 bg-amber-50/30' : 'border-stone-200 bg-stone-50'}`}>
-                        <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+                        <div className="p-4 border-b border-stone-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                             <h3 className="font-bold text-amber-950 text-sm">Konum ve Kopya Bilgisi</h3>
                             <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <input type="checkbox" name="addCopy" checked={form.addCopy} onChange={handleChange} className="w-4 h-4 text-amber-600 rounded border-stone-300 focus:ring-amber-500" />
@@ -419,7 +417,7 @@ export default function AddBookPage() {
                         </div>
 
                         {form.addCopy && (
-                            <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2">
                                 <div>
                                     <label className="block text-xs font-bold text-stone-600 mb-1">Barkod No <span className="text-red-500">*</span></label>
                                     <input name="barcodeNumber" type="text" inputMode="numeric" value={form.barcodeNumber} onChange={handleChange} className={getInputClass('barcodeNumber')} placeholder="Sadece rakam giriniz" />

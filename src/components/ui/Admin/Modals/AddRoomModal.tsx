@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { CreateRoomDto } from '@/src/types/roomAndShelf';
-import toast from "react-hot-toast";
 
 interface Props {
     isOpen: boolean;
@@ -25,9 +24,24 @@ export default function AddRoomModal({ isOpen, onClose, onSubmit }: Props) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-                <h3 className="font-bold text-lg mb-4 text-amber-950">Yeni Oda Ekle</h3>
+        <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-sm p-6"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg text-amber-950">Yeni Oda Ekle</h3>
+                    <button
+                        onClick={onClose}
+                        className="text-stone-400 hover:text-stone-600 text-2xl leading-none"
+                    >
+                        &times;
+                    </button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Oda Kodu / Adı</label>
@@ -35,7 +49,7 @@ export default function AddRoomModal({ isOpen, onClose, onSubmit }: Props) {
                             type="text" required
                             value={form.roomCode}
                             onChange={e => setForm({...form, roomCode: e.target.value})}
-                            className="w-full border text-black p-2 rounded text-sm outline-none focus:border-amber-500"
+                            className="w-full border border-stone-300 text-black p-2 rounded text-sm outline-none focus:border-amber-500"
                             placeholder="Örn: A-Blok Tarih"
                         />
                     </div>
@@ -44,16 +58,23 @@ export default function AddRoomModal({ isOpen, onClose, onSubmit }: Props) {
                         <textarea
                             value={form.description}
                             onChange={e => setForm({...form, description: e.target.value})}
-                            className="w-full border text-black p-2 rounded text-sm outline-none focus:border-amber-500"
+                            className="w-full border border-stone-300 text-black p-2 rounded text-sm outline-none focus:border-amber-500 resize-none"
+                            rows={3}
                             placeholder="Zemin kat, girişin solu..."
                         />
                     </div>
-                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded transition-colors">İptal</button>
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded transition-colors"
+                        >
+                            İptal
+                        </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50 transition-colors"
+                            className="px-6 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50 transition-colors font-medium"
                         >
                             {loading ? 'Kaydediliyor...' : 'Oluştur'}
                         </button>

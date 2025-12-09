@@ -14,26 +14,21 @@ import UpdateRoomModal from '@/src/components/ui/Admin/Modals/UpdateRoomModal';
 import toast from "react-hot-toast";
 
 export default function AdminShelvesPage() {
-    // --- STATE ---
     const [rooms, setRooms] = useState<Room[]>([]);
     const [shelves, setShelves] = useState<Shelf[]>([]);
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
-    // Loading States
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [loadingShelves, setLoadingShelves] = useState(false);
 
-    // --- UPDATE STATES ---
     const [isUpdateRoomModalOpen, setIsUpdateRoomModalOpen] = useState(false);
     const [isUpdateShelfModalOpen, setIsUpdateShelfModalOpen] = useState(false);
     const [roomToEdit, setRoomToEdit] = useState<Room | null>(null);
     const [shelfToEdit, setShelfToEdit] = useState<Shelf | null>(null);
 
-    // Modal States
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
     const [isShelfModalOpen, setIsShelfModalOpen] = useState(false);
 
-    // --- DATA FETCHING ---
     useEffect(() => {
         fetchRooms();
     }, []);
@@ -173,50 +168,54 @@ export default function AdminShelvesPage() {
     };
 
     return (
-        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+        <div className="space-y-6 md:h-[calc(100vh-140px)] flex flex-col pb-10 md:pb-0">
 
             <div>
-                <h1 className="text-2xl font-bold text-stone-800 font-serif">Yerleşim Yönetimi</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Yerleşim Yönetimi</h1>
                 <p className="text-stone-500 text-sm">Oda ve raf hiyerarşisini buradan yönetebilirsiniz.</p>
             </div>
 
-            <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-                <RoomListPanel
-                    rooms={rooms}
-                    selectedRoom={selectedRoom}
-                    loading={loadingRooms}
-                    onSelectRoom={setSelectedRoom}
-                    onAddClick={() => setIsRoomModalOpen(true)}
-                    onEditClick={handleOpenEditRoom}
-                />
-                <ShelfListPanel
-                    shelves={shelves}
-                    selectedRoom={selectedRoom}
-                    loading={loadingShelves}
-                    onAddClick={() => setIsShelfModalOpen(true)}
-                    onEditClick={handleOpenEditShelf}
-                />
+            <div className="flex flex-col md:grid md:grid-cols-12 gap-6 flex-1 min-h-0">
+
+                <div className="md:col-span-4 h-64 md:h-full">
+                    <RoomListPanel
+                        rooms={rooms}
+                        selectedRoom={selectedRoom}
+                        loading={loadingRooms}
+                        onSelectRoom={setSelectedRoom}
+                        onAddClick={() => setIsRoomModalOpen(true)}
+                        onEditClick={handleOpenEditRoom}
+                    />
+                </div>
+
+                <div className="md:col-span-8 h-96 md:h-full">
+                    <ShelfListPanel
+                        shelves={shelves}
+                        selectedRoom={selectedRoom}
+                        loading={loadingShelves}
+                        onAddClick={() => setIsShelfModalOpen(true)}
+                        onEditClick={handleOpenEditShelf}
+                    />
+                </div>
             </div>
+
             <AddRoomModal
                 isOpen={isRoomModalOpen}
                 onClose={() => setIsRoomModalOpen(false)}
                 onSubmit={handleRoomSubmit}
             />
-
             <AddShelfModal
                 isOpen={isShelfModalOpen}
                 onClose={() => setIsShelfModalOpen(false)}
                 selectedRoom={selectedRoom}
                 onSubmit={handleShelfSubmit}
             />
-
             <UpdateRoomModal
                 isOpen={isUpdateRoomModalOpen}
                 onClose={() => setIsUpdateRoomModalOpen(false)}
                 room={roomToEdit}
                 onSubmit={handleUpdateRoomSubmit}
             />
-
             <UpdateShelfModal
                 isOpen={isUpdateShelfModalOpen}
                 onClose={() => setIsUpdateShelfModalOpen(false)}

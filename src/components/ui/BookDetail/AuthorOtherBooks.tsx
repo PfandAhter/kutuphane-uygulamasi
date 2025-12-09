@@ -19,7 +19,6 @@ const AuthorOtherBooks = ({ authorId, authorName, categoryId, currentBookId }: P
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                // Yazar ID'sine göre kitapları çek
                 const result = await bookService.getBooksByAuthor(authorId, currentBookId, categoryId);
 
                 console.log("Diğer kitaplar:", result);

@@ -30,19 +30,16 @@ export default function RegisterPage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        // --- TELEFON NUMARASI KONTROLÜ ---
         if (name === 'phoneNumber') {
-            // Regex: Sadece rakamlara izin ver (boş string silme işlemi için kabul edilir)
             if (value === '' || /^\d+$/.test(value)) {
                 setFormData({
                     ...formData,
                     [name]: value
                 });
             }
-            return; // İşlemi burada kes, aşağıya devam etmesin
+            return;
         }
 
-        // Diğer alanlar için standart güncelleme
         setFormData({
             ...formData,
             [name]: value
@@ -136,11 +133,11 @@ export default function RegisterPage() {
                         <input
                             name="phoneNumber"
                             type="tel"
-                            inputMode="numeric" // Mobil klavyeyi sayısal açar
+                            inputMode="numeric"
                             value={formData.phoneNumber}
                             onChange={handleChange}
                             placeholder="5xx xxx xx xx"
-                            maxLength={11} // İsteğe bağlı: Maksimum uzunluk (örn: 05xxxxxxxxx)
+                            maxLength={11}
                             className="w-full rounded-md border border-[#b2824b] px-3 py-2 text-sm bg-[#fff9f1] text-black placeholder:text-[#7a6a58] focus:outline-none focus:ring-2 focus:ring-[#a15c2f]"
                             required
                         />

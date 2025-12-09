@@ -103,16 +103,16 @@ export default function AdminAuthorsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 md:space-y-8 pb-10">
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800 font-serif">Yazar Yönetimi</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Yazar Yönetimi</h1>
                     <p className="text-stone-500 text-sm">Toplam {totalCount} yazar listeleniyor.</p>
                 </div>
                 <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                    className="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                     <span>➕</span> Yeni Yazar Ekle
                 </button>
@@ -141,18 +141,49 @@ export default function AdminAuthorsPage() {
                 </div>
                 <button
                     onClick={handleClearFilters}
-                    className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded border border-stone-200 hover:border-stone-300 transition-all"
+                    className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded border border-stone-200 hover:border-stone-300 transition-all w-full md:w-auto"
                 >
                     Temizle
                 </button>
             </div>
 
-            {/* Tablo */}
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden min-h-[400px]">
-                <table className="w-full text-sm text-left">
+
+                <div className="md:hidden divide-y divide-stone-100">
+                    {loading && <div className="p-8 text-center text-stone-500">Yükleniyor...</div>}
+                    {!loading && authors.length === 0 && <div className="p-8 text-center text-stone-500 italic">Kayıt bulunamadı.</div>}
+
+                    {!loading && authors.map((author) => (
+                        <div key={author.id} className="p-4 flex flex-col gap-3 bg-white">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="font-bold text-stone-800">{author.firstName} {author.lastName}</h3>
+                                    <span className="text-xs text-stone-400 font-mono">ID: #{author.id}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-1 pt-3 border-t border-stone-50">
+                                <button
+                                    onClick={() => openUpdateModal(author)}
+                                    className="flex-1 text-center text-amber-700 bg-amber-50 py-2 rounded border border-amber-100 text-xs font-bold active:scale-95 transition-transform"
+                                >
+                                    Düzenle
+                                </button>
+                                <button
+                                    onClick={() => openDeleteModal(author)}
+                                    className="flex-1 text-center text-red-700 bg-red-50 py-2 rounded border border-red-100 text-xs font-bold active:scale-95 transition-transform"
+                                >
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <table className="hidden md:table w-full text-sm text-left">
                     <thead className="bg-stone-50 text-stone-500 uppercase text-xs border-b border-stone-200">
                     <tr>
-                        <th className="px-6 py-3">ID</th>
+                        <th className="px-6 py-3 w-20">ID</th>
                         <th className="px-6 py-3">Ad</th>
                         <th className="px-6 py-3">Soyad</th>
                         <th className="px-6 py-3 text-right">İşlemler</th>
@@ -160,15 +191,11 @@ export default function AdminAuthorsPage() {
                     </thead>
                     <tbody className="divide-y divide-stone-100">
                     {loading && (
-                        <tr>
-                            <td colSpan={4} className="p-8 text-center text-stone-500">Yükleniyor...</td>
-                        </tr>
+                        <tr><td colSpan={4} className="p-8 text-center text-stone-500">Yükleniyor...</td></tr>
                     )}
 
                     {!loading && authors.length === 0 && (
-                        <tr>
-                            <td colSpan={4} className="p-8 text-center text-stone-500 italic">Kayıt bulunamadı.</td>
-                        </tr>
+                        <tr><td colSpan={4} className="p-8 text-center text-stone-500 italic">Kayıt bulunamadı.</td></tr>
                     )}
 
                     {!loading && authors.map((author) => (
@@ -179,13 +206,13 @@ export default function AdminAuthorsPage() {
                             <td className="px-6 py-4 text-right flex justify-end gap-2">
                                 <button
                                     onClick={() => openUpdateModal(author)}
-                                    className="text-amber-700 hover:text-amber-900 transition-colors font-medium text-xs bg-amber-50 px-3 py-1 rounded"
+                                    className="text-stone-400 hover:text-amber-700 transition-colors font-medium"
                                 >
                                     Düzenle
                                 </button>
                                 <button
                                     onClick={() => openDeleteModal(author)}
-                                    className="text-red-600 hover:text-red-800 transition-colors font-medium text-xs bg-red-50 px-3 py-1 rounded"
+                                    className="text-stone-400 hover:text-red-700 transition-colors font-medium"
                                 >
                                     Sil
                                 </button>
@@ -197,12 +224,14 @@ export default function AdminAuthorsPage() {
             </div>
 
             {!loading && !isSearching && totalCount > 0 && (
-                <PaginationControls
-                    currentPage={page}
-                    totalCount={totalCount}
-                    pageSize={pageSize}
-                    onPageChange={setPage}
-                />
+                <div className="overflow-x-auto">
+                    <PaginationControls
+                        currentPage={page}
+                        totalCount={totalCount}
+                        pageSize={pageSize}
+                        onPageChange={setPage}
+                    />
+                </div>
             )}
 
             <AddAuthorModal

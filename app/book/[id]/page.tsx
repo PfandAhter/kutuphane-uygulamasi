@@ -8,7 +8,6 @@ import { BookDetail } from "@/src/types/bookDetail";
 import { useAuth } from '@/src/hooks/useAuth';
 import toast from 'react-hot-toast';
 
-// Components
 import BookInfoCard from '@/src/components/ui/BookDetail/BookInfoCard';
 import BookMetadata from '@/src/components/ui/BookDetail/BookMetadata';
 import CopyStatusList from '@/src/components/ui/BookDetail/CopyStatusList';
@@ -38,8 +37,6 @@ export default function BookDetailPage() {
         if (!id) return;
         try {
             const data = await bookService.getBookDetails(id);
-            console.log("AUTHOR TEST TEST ",data.bookAuthors);
-            console.log("IMAGE URL GELIYOR MU TEST ?", data.imageUrl);
             setBook(data);
         } catch (err) {
             console.error(err);

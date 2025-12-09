@@ -22,31 +22,26 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
     const [userDetail, setUserDetail] = useState<UserViewDto | null>(user);
     const [loading, setLoading] = useState(false);
 
-    // UI State
     const [viewMode, setViewMode] = useState<ViewMode>('details');
     const [actionLoading, setActionLoading] = useState(false);
 
-    // Form State
     const [fineTypes, setFineTypes] = useState<FineType[]>([]);
     const [selectedTypeId, setSelectedTypeId] = useState<number>(0);
     const [reason, setReason] = useState('');
     const [amount, setAmount] = useState('');
 
-    // 1. Modal açılınca kullanıcıyı çek
     useEffect(() => {
         if (isOpen && user) {
             setViewMode('details');
             setUserDetail(user);
             fetchUserDetail(user.id);
 
-            // Form reset
             setSelectedTypeId(0);
             setReason('');
             setAmount('');
         }
     }, [isOpen, user]);
 
-    // 2. Ceza ekranına geçince tipleri çek
     useEffect(() => {
         if (viewMode === 'assignFine') {
             fetchFineTypes();
@@ -76,8 +71,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
             setLoading(false);
         }
     };
-
-    // --- CEZA İŞLEMLERİ ---
 
     const handleAssignFineSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -124,7 +117,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
 
     if (!isOpen || !userDetail) return null;
 
-    // Seçili tipin parasal olup olmadığını kontrol et (UI Gösterimi için)
     const isSelectedMonetary = fineTypes.find(t => t.id === selectedTypeId)?.name.toLowerCase().includes("para")
         || fineTypes.find(t => t.id === selectedTypeId)?.name.toLowerCase().includes("monetary");
 
@@ -160,10 +152,8 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
 
                 <div className="p-6 overflow-y-auto">
 
-                    {/* 1. DETAY GÖRÜNÜMÜ */}
                     {viewMode === 'details' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-left-4 duration-300">
-                            {/* Sol Kolon */}
                             <div className="space-y-5">
                                 <h3 className="font-bold text-stone-800 border-b border-stone-100 pb-2 text-sm uppercase tracking-wide">Kişisel Bilgiler</h3>
                                 <div className="grid grid-cols-2 gap-4">
@@ -178,7 +168,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                 </div>
                             </div>
 
-                            {/* Sağ Kolon */}
                             <div className="space-y-5">
                                 <h3 className="font-bold text-stone-800 border-b border-stone-100 pb-2 text-sm uppercase tracking-wide">Durum</h3>
                                 <div className={`flex justify-between items-center p-3 rounded border transition-colors ${userDetail.hasFine ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
@@ -188,7 +177,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
 
                                 <div className="pt-2 flex flex-col gap-3"> {/*TODO: Burada Hasfine kismi kaldirilacak, kullanicinin cezalari burada gorunmeyecektir.*/}
                                     {userDetail.hasFine ? (
-                                        // DEĞİŞTİ: Artık direkt ödeme yapmıyor, sayfaya yönlendiriyor.
                                         <button
                                             onClick={handleGoToFinePage}
                                             disabled={actionLoading}
@@ -206,7 +194,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                         </div>
                     )}
 
-                    {/* 2. CEZA ATAMA FORMU */}
                     {viewMode === 'assignFine' && (
                         <form onSubmit={handleAssignFineSubmit} className="space-y-5 animate-in slide-in-from-right-4 duration-300">
                             <div className="flex items-center gap-2 mb-2">
@@ -214,7 +201,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                 <h3 className="font-bold text-red-800 text-lg">Ceza Türü Seçin</h3>
                             </div>
 
-                            {/* DİNAMİK CEZA TİPLERİ (GRID) */}
                             {fineTypes.length === 0 && !loading ? (
                                 <p className="text-red-500 text-sm">
                                     Ceza tipleri yüklenemedi veya uygun kriterlerde (Günlük Oran = 0) ceza tipi bulunamadı.
@@ -246,7 +232,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                 </div>
                             )}
 
-                            {/* Tutar Alanı (Sadece Para Cezası İse) */}
                             {isSelectedMonetary && (
                                 <div className="animate-in fade-in zoom-in duration-200">
                                     <label className="block text-xs font-bold text-stone-600 mb-1">Ceza Tutarı (TL)</label>
@@ -260,7 +245,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                 </div>
                             )}
 
-                            {/* Neden Alanı */}
                             <div>
                                 <label className="block text-xs font-bold text-stone-600 mb-1">Ceza Nedeni <span className="text-red-500">*</span></label>
                                 <textarea
@@ -272,7 +256,6 @@ export default function UserDetailModal({ isOpen, onClose, user, onUpdate }: Pro
                                 />
                             </div>
 
-                            {/* Submit */}
                             <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
                                 <button
                                     type="button"

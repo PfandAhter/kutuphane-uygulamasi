@@ -106,22 +106,21 @@ export default function AdminCategoriesPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 md:space-y-8 pb-10">
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800 font-serif">Kategori Yönetimi</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Kategori Yönetimi</h1>
                     <p className="text-stone-500 text-sm">Toplam {totalCount} kategori listeleniyor.</p>
                 </div>
                 <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                    className="bg-amber-900 hover:bg-amber-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                     <span>➕</span> Yeni Kategori Ekle
                 </button>
             </div>
 
-            {/* Arama Alanı */}
             <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
                 <div className="relative w-full md:w-1/3">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
@@ -136,7 +135,42 @@ export default function AdminCategoriesPage() {
             </div>
 
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-hidden min-h-[400px]">
-                <table className="w-full text-sm text-left">
+
+                <div className="md:hidden divide-y divide-stone-100">
+                    {loading && <div className="p-8 text-center text-stone-500">Yükleniyor...</div>}
+                    {!loading && categories.length === 0 && <div className="p-8 text-center text-stone-500 italic">Kayıt bulunamadı.</div>}
+
+                    {!loading && categories.map((category) => (
+                        <div key={category.id} className="p-4 flex flex-col gap-3 bg-white">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="font-bold text-stone-800">{category.name}</h3>
+                                    <span className="text-xs text-stone-400 font-mono">ID: #{category.id}</span>
+                                </div>
+                                <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
+                                    {category.bookCount ?? 0} Kitap
+                                </span>
+                            </div>
+
+                            <div className="flex gap-2 mt-1 pt-3 border-t border-stone-50">
+                                <button
+                                    onClick={() => handleOpenUpdateModal(category)}
+                                    className="flex-1 text-center text-amber-700 bg-amber-50 py-2 rounded border border-amber-100 text-xs font-bold active:scale-95 transition-transform"
+                                >
+                                    Düzenle
+                                </button>
+                                <button
+                                    onClick={() => handleOpenDeleteModal(category)}
+                                    className="flex-1 text-center text-red-700 bg-red-50 py-2 rounded border border-red-100 text-xs font-bold active:scale-95 transition-transform"
+                                >
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <table className="hidden md:table w-full text-sm text-left">
                     <thead className="bg-stone-50 text-stone-500 uppercase text-xs border-b border-stone-200">
                     <tr>
                         <th className="px-6 py-3 w-20">ID</th>
@@ -148,17 +182,11 @@ export default function AdminCategoriesPage() {
                     <tbody className="divide-y divide-stone-100">
 
                     {loading && (
-                        <tr>
-                            <td colSpan={3} className="p-8 text-center text-stone-500">Yükleniyor...</td>
-                        </tr>
+                        <tr><td colSpan={4} className="p-8 text-center text-stone-500">Yükleniyor...</td></tr>
                     )}
 
                     {!loading && categories.length === 0 && (
-                        <tr>
-                            <td colSpan={3} className="p-8 text-center text-stone-500 italic">
-                                {searchTerm ? `"${searchTerm}" ile eşleşen kayıt bulunamadı.` : "Kayıt bulunamadı."}
-                            </td>
-                        </tr>
+                        <tr><td colSpan={4} className="p-8 text-center text-stone-500 italic">Kayıt bulunamadı.</td></tr>
                     )}
 
                     {!loading && categories.map((category) => (
@@ -191,13 +219,16 @@ export default function AdminCategoriesPage() {
             </div>
 
             {!loading && searchTerm === "" && totalCount > 0 && (
-                <PaginationControls
-                    currentPage={page}
-                    totalCount={totalCount}
-                    pageSize={pageSize}
-                    onPageChange={setPage}
-                />
+                <div className="overflow-x-auto">
+                    <PaginationControls
+                        currentPage={page}
+                        totalCount={totalCount}
+                        pageSize={pageSize}
+                        onPageChange={setPage}
+                    />
+                </div>
             )}
+
             <AddCategoryModal
                 isOpen={isAddModalOpen}
                 onClose={handleCloseModals}

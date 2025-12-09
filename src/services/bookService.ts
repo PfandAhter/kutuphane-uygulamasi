@@ -107,7 +107,7 @@ export const bookService = {
         const data = await response.json();
 
         if (!response.ok) return [];
-        //return data;
-        return data.items.filter((b: any) => b.id !== currentBookId); //TODO: Bunu duzelticez.
+        if (!data || !data.items) return [];
+        return data.items.filter((b: Book) => b.id !== currentBookId);
     }
 };

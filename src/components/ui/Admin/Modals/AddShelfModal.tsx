@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Room } from '@/src/types/roomAndShelf';
-import toast from "react-hot-toast";
 
 interface Props {
     isOpen: boolean;
@@ -26,9 +25,18 @@ export default function AddShelfModal({ isOpen, onClose, selectedRoom, onSubmit 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-                <h3 className="font-bold text-lg mb-4 text-amber-950">Yeni Raf Ekle</h3>
+        <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-sm p-6"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg text-amber-950">Yeni Raf Ekle</h3>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
+                </div>
 
                 <div className="bg-amber-50 p-3 rounded text-xs text-amber-900 mb-4 border border-amber-100">
                     <strong className="block mb-1">Seçili Oda:</strong>
@@ -42,12 +50,18 @@ export default function AddShelfModal({ isOpen, onClose, selectedRoom, onSubmit 
                             type="text" required
                             value={shelfCode}
                             onChange={e => setShelfCode(e.target.value)}
-                            className="w-full border text-black p-2 rounded text-sm outline-none focus:border-amber-500"
+                            className="w-full border border-stone-300 text-black p-2 rounded text-sm outline-none focus:border-amber-500"
                             placeholder="Örn: R-101"
                         />
                     </div>
                     <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded transition-colors">İptal</button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded transition-colors"
+                        >
+                            İptal
+                        </button>
                         <button
                             type="submit"
                             disabled={loading}

@@ -13,7 +13,6 @@ export default function ActiveLoansPage() {
     const [data, setData] = useState<PaginatedResult<LoanWithUserDetailsDto> | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
 
@@ -34,19 +33,24 @@ export default function ActiveLoansPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-end">
+        <div className="space-y-6 md:space-y-8 pb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-800 font-serif">Aktif Ödünçler</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Aktif Ödünçler</h1>
                     <p className="text-stone-500 text-sm">Okunmakta olan kitaplar listesi.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard title="Toplam Aktif" value={data?.totalCount || 0} icon="📚" trend="Okunuyor" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                <StatCard
+                    title="Toplam Aktif"
+                    value={data?.totalCount || 0}
+                    icon="📚"
+                    trend="Okunuyor"
+                />
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
+            <div className="bg-white p-4 md:p-6 rounded-lg border border-stone-200 shadow-sm">
                 <LoanTable
                     loans={data?.items || []}
                     loading={loading}
@@ -54,12 +58,14 @@ export default function ActiveLoansPage() {
                 />
 
                 {data && (
-                    <Pagination
-                        currentPage={currentPage}
-                        pageSize={data.totalPages}
-                        totalCount={data.totalCount}
-                        onPageChange={(page) => setCurrentPage(page)}
-                    />
+                    <div className="mt-4">
+                        <Pagination
+                            currentPage={currentPage}
+                            pageSize={pageSize}
+                            totalCount={data.totalCount}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
                 )}
             </div>
         </div>

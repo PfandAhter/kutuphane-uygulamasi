@@ -150,16 +150,16 @@ const AddBookCopyModal = ({ isOpen, onClose, book }: AddCopyModalProps) => {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-md border border-stone-200"
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-md border border-stone-200"
                 onClick={(e) => e.stopPropagation()}
             >
 
                 <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50 rounded-t-lg">
                     <h3 className="font-serif font-bold text-amber-950">Kopya Ekle</h3>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold">✕</button>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold text-xl">&times;</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
 
                     <div className="bg-amber-50 p-3 rounded border border-amber-100 text-sm mb-4">
                         <span className="font-bold text-amber-800 block mb-1">Seçilen Kitap:</span>

@@ -41,8 +41,14 @@ export default function AddAuthorModal({ isOpen, onClose, onSuccess }: Props) {
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-                <h3 className="font-serif font-bold text-lg text-amber-950 mb-4">Yeni Yazar Ekle</h3>
+            {/* Responsive Genişlik: w-11/12 (Mobilde ekranın %92'si), max-w-md (Masaüstünde sınırlı) */}
+            <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6" onClick={e => e.stopPropagation()}>
+
+                <div className="flex justify-between items-center mb-4 border-b border-stone-100 pb-2">
+                    <h3 className="font-serif font-bold text-lg text-amber-950">Yeni Yazar Ekle</h3>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-xl leading-none">&times;</button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-xs font-bold text-stone-600 mb-1">Ad</label>
@@ -58,9 +64,9 @@ export default function AddAuthorModal({ isOpen, onClose, onSuccess }: Props) {
                             className="w-full border text-black p-2 rounded text-sm outline-none focus:border-amber-500"
                         />
                     </div>
-                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded">İptal</button>
-                        <button type="submit" disabled={loading} className="px-4 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded transition-colors">İptal</button>
+                        <button type="submit" disabled={loading} className="px-6 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50 transition-colors font-medium">
                             {loading ? '...' : 'Ekle'}
                         </button>
                     </div>

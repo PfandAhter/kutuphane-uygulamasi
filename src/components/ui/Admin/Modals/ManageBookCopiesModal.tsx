@@ -166,25 +166,71 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
 
     const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
-        // Regex: Sadece rakamlar
         if (/^\d*$/.test(val)) {
             setEditForm({ ...editForm, barcodeNumber: val });
         }
     };
 
+    const renderEditForm = () => (
+        <div className="flex flex-col gap-2 p-2 bg-amber-50 rounded border border-amber-200">
+            <input
+                type="text"
+                value={editForm.barcodeNumber}
+                onChange={handleBarcodeChange}
+                className="border border-amber-300 rounded p-1.5 text-xs w-full outline-none focus:ring-1 focus:ring-amber-500 text-black font-mono"
+                maxLength={13}
+                placeholder="Barkod"
+            />
+            <div className="flex gap-2">
+                <select
+                    className="border border-amber-300 rounded p-1.5 text-xs text-black w-1/2 outline-none focus:ring-1 focus:ring-amber-500"
+                    value={editForm.roomId}
+                    onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value), shelfCode: '' })}
+                >
+                    <option value={0}>Oda Seç</option>
+                    {rooms.map(r => (
+                        <option key={r.id} value={r.id}>{r.roomCode}</option>
+                    ))}
+                </select>
+                <select
+                    className="border border-amber-300 rounded p-1.5 text-xs text-black w-1/2 outline-none focus:ring-1 focus:ring-amber-500"
+                    value={editForm.shelfCode}
+                    onChange={(e) => setEditForm({ ...editForm, shelfCode: e.target.value })}
+                    disabled={editForm.roomId === 0}
+                >
+                    <option value="">Raf Seç</option>
+                    {availableShelves.map(s => (
+                        <option key={s.id} value={s.shelfCode}>{s.shelfCode}</option>
+                    ))}
+                </select>
+            </div>
+            <div className="flex gap-2 mt-1">
+                <button
+                    // @ts-ignore
+                    onClick={() => handleSave(editingId)}
+                    className="bg-green-600 text-white px-3 py-1 rounded text-xs w-1/2"
+                >
+                    Kaydet
+                </button>
+                <button onClick={handleCancelEdit} className="bg-stone-300 text-stone-700 px-3 py-1 rounded text-xs w-1/2">İptal</button>
+            </div>
+        </div>
+    );
+
     if (!isOpen || !book) return null;
 
     const totalPages = Math.ceil(totalCount / pageSize);
+
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl border border-stone-200 flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl border border-stone-200 flex flex-col max-h-[90vh]">
 
-                <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50 rounded-t-lg">
+                <div className="flex justify-between items-center p-4 border-b border-stone-100 bg-stone-50 rounded-t-lg shrink-0">
                     <div>
                         <h3 className="font-serif font-bold text-amber-950">Kopyaları Yönet</h3>
                         <p className="text-xs text-stone-500">{book.title} (Toplam: {totalCount})</p>
                     </div>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold px-2">✕</button>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 font-bold px-2 text-xl">&times;</button>
                 </div>
 
                 <div className="p-0 overflow-y-auto flex-1 relative">
@@ -194,7 +240,7 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                         </div>
                     )}
 
-                    <table className="w-full text-sm text-left">
+                    <table className="hidden md:table w-full text-sm text-left">
                         <thead className="bg-stone-50 text-stone-500 uppercase text-xs sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th className="px-6 py-3">Barkod</th>
@@ -207,138 +253,95 @@ export default function ManageBookCopiesModal({ isOpen, onClose, book, onUpdate 
                         <tbody className="divide-y divide-stone-100">
                         {copies.map((copy) => {
                             const isEditing = editingId === copy.id;
+                            if (isEditing) {
+                                return (
+                                    <tr key={copy.id}>
+                                        <td colSpan={5} className="p-4">
+                                            {renderEditForm()}
+                                        </td>
+                                    </tr>
+                                )
+                            }
                             return (
                                 <tr key={copy.id} className="hover:bg-amber-50/20">
-
-                                    <td className="px-6 py-4 font-mono text-stone-600 font-medium">
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editForm.barcodeNumber}
-                                                onChange={handleBarcodeChange}
-                                                className="border border-amber-300 rounded p-1 text-xs w-32 outline-none focus:ring-1 focus:ring-amber-500 text-black"
-                                                maxLength={13}
-                                                placeholder="Sadece Rakam"
-                                            />
-                                        ) : (
-                                            copy.barcodeNumber
-                                        )}
-                                    </td>
-
+                                    <td className="px-6 py-4 font-mono text-stone-600 font-medium">{copy.barcodeNumber}</td>
                                     <td className="px-6 py-4">
-                                        {isEditing ? (
-                                            <select
-                                                className="border border-amber-300 rounded p-1 text-xs text-black w-full outline-none focus:ring-1 focus:ring-amber-500"
-                                                value={editForm.roomId}
-                                                onChange={(e) => setEditForm({ ...editForm, roomId: Number(e.target.value), shelfCode: '' })}
-                                            >
-                                                <option value={0}>Seçiniz</option>
-                                                {rooms.map(r => (
-                                                    <option key={r.id} value={r.id}>
-                                                        {r.roomCode} ({r.description})
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span className="text-stone-800">
-                                                {copy.shelf?.room?.roomCode} <span className="text-stone-400 text-[10px]">({copy.shelf?.room?.description})</span>
-                                            </span>
-                                        )}
+                                        <span className="text-stone-800">{copy.shelf?.room?.roomCode}</span>
                                     </td>
-
                                     <td className="px-6 py-4">
-                                        {isEditing ? (
-                                            <select
-                                                className="border border-amber-300 rounded p-1 text-xs text-black w-24 outline-none focus:ring-1 focus:ring-amber-500"
-                                                value={editForm.shelfCode}
-                                                onChange={(e) => setEditForm({ ...editForm, shelfCode: e.target.value })}
-                                                disabled={editForm.roomId === 0}
-                                            >
-                                                <option value="">Raf Seç</option>
-                                                {availableShelves.map(s => (
-                                                    <option key={s.id} value={s.shelfCode}>{s.shelfCode}</option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span className="font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded text-xs">
-                                                {copy.shelf?.shelfCode}
-                                            </span>
-                                        )}
+                                        <span className="font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded text-xs">{copy.shelf?.shelfCode}</span>
                                     </td>
-
                                     <td className="px-6 py-4">
                                         {copy.isAvailable
                                             ? <span className="text-green-700 bg-green-50 px-2 py-1 rounded-full text-xs border border-green-200 font-bold">Müsait</span>
                                             : <span className="text-red-700 bg-red-50 px-2 py-1 rounded-full text-xs border border-red-200 font-bold">Ödünçte</span>
                                         }
                                     </td>
-
                                     <td className="px-6 py-4 text-right">
-                                        {isEditing ? (
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleSave(copy.id)}
-                                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-colors"
-                                                >
-                                                    Kaydet
-                                                </button>
-                                                <button
-                                                    onClick={handleCancelEdit}
-                                                    className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded text-xs transition-colors"
-                                                >
-                                                    İptal
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleEditClick(copy)}
-                                                    className="text-amber-700 hover:text-amber-900 text-xs font-medium hover:underline"
-                                                >
-                                                    Düzenle
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(copy.id)}
-                                                    className="text-red-600 hover:text-red-800 text-xs font-medium hover:underline"
-                                                >
-                                                    Sil
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => handleEditClick(copy)} className="text-amber-700 hover:text-amber-900 text-xs font-medium hover:underline">Düzenle</button>
+                                            <button onClick={() => handleDelete(copy.id)} className="text-red-600 hover:text-red-800 text-xs font-medium hover:underline">Sil</button>
+                                        </div>
                                     </td>
                                 </tr>
                             );
                         })}
-
-                        {copies.length === 0 && !loading && (
-                            <tr>
-                                <td colSpan={5} className="text-center py-8 text-stone-500">
-                                    Bu kitaba ait kayıtlı kopya bulunamadı.
-                                </td>
-                            </tr>
-                        )}
                         </tbody>
                     </table>
+
+                    <div className="md:hidden divide-y divide-stone-100">
+                        {copies.map((copy) => {
+                            const isEditing = editingId === copy.id;
+                            if (isEditing) {
+                                return <div key={copy.id} className="p-4">{renderEditForm()}</div>
+                            }
+                            return (
+                                <div key={copy.id} className="p-4 flex flex-col gap-2">
+                                    <div className="flex justify-between items-start">
+                                        <span className="font-mono font-bold text-stone-800 text-sm">{copy.barcodeNumber}</span>
+                                        {copy.isAvailable
+                                            ? <span className="text-green-700 bg-green-50 px-2 py-0.5 rounded text-[10px] border border-green-200 font-bold">Müsait</span>
+                                            : <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded text-[10px] border border-red-200 font-bold">Ödünçte</span>
+                                        }
+                                    </div>
+                                    <div className="text-xs text-stone-600 grid grid-cols-2 gap-2">
+                                        <div><span className="font-bold text-stone-400">Oda:</span> {copy.shelf?.room?.roomCode}</div>
+                                        <div><span className="font-bold text-stone-400">Raf:</span> {copy.shelf?.shelfCode}</div>
+                                    </div>
+                                    <div className="flex justify-end gap-3 mt-2 border-t border-stone-50 pt-2">
+                                        <button onClick={() => handleEditClick(copy)} className="text-amber-700 text-xs font-bold border border-amber-200 px-3 py-1 rounded bg-amber-50">Düzenle</button>
+                                        <button onClick={() => handleDelete(copy.id)} className="text-red-600 text-xs font-bold border border-red-200 px-3 py-1 rounded bg-red-50">Sil</button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {copies.length === 0 && !loading && (
+                        <div className="text-center py-8 text-stone-500 text-sm">
+                            Bu kitaba ait kayıtlı kopya bulunamadı.
+                        </div>
+                    )}
                 </div>
 
-                <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-lg flex justify-between items-center">
+                <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-lg flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                         <button
                             disabled={page === 1 || loading}
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100 text-stone-700 transition-colors"
                         >
-                            ← Önceki
+                            ←
                         </button>
                         <span className="text-xs text-stone-600 font-medium bg-white px-3 py-1 border rounded shadow-sm">
-                            Sayfa {page} / {totalPages || 1}
+                            {page} / {totalPages || 1}
                         </span>
                         <button
                             disabled={page >= totalPages || loading}
                             onClick={() => setPage(p => p + 1)}
                             className="px-3 py-1 bg-white border border-stone-300 rounded text-xs disabled:opacity-50 hover:bg-stone-100 text-stone-700 transition-colors"
                         >
-                            Sonraki →
+                            →
                         </button>
                     </div>
                     <button

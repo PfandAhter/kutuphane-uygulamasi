@@ -26,13 +26,16 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
 
     return (
         <div className="w-full max-w-[360px] h-[220px] mx-auto mb-6 perspective-[1000px] select-none group">
-            <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl p-6 text-white backface-hidden z-20 flex flex-col justify-between border border-stone-700">
+
+            <div className={`relative w-full h-full transition-all duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
+
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-800 to-stone-900 rounded-xl shadow-xl p-6 text-white [backface-visibility:hidden] z-20 flex flex-col justify-between border border-stone-700">
+
                     <div className="flex justify-between items-start">
                         <div className="w-12 h-9 bg-gradient-to-tr from-yellow-400 to-yellow-200 rounded-md border border-yellow-600 shadow-sm opacity-90 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 skew-y-12 origin-top-left"></div>
                         </div>
-                        <span className="font-serif italic text-lg opacity-70 text-stone-300">KütüphaneKart</span>
+                        <span className="font-serif italic text-lg opacity-70 text-stone-300">Kütüphane Kart</span>
                     </div>
 
                     <div className="space-y-6">
@@ -48,6 +51,7 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
                                 </span>
                             </div>
 
+                            {/* SKT */}
                             <div className="flex flex-col p-1 -m-1 transition-all">
                                 <span className="text-[9px] uppercase text-stone-400 font-bold tracking-wider">SKT</span>
                                 <span className="font-mono font-medium tracking-wider text-sm">
@@ -58,7 +62,7 @@ export default function CreditCardVisual({ cardNumber, cardName, expiry, cvc, fo
                     </div>
                 </div>
 
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-700 to-stone-800 rounded-xl shadow-xl rotate-y-180 backface-hidden overflow-hidden border border-stone-600">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-stone-700 to-stone-800 rounded-xl shadow-xl [transform:rotateY(180deg)] [backface-visibility:hidden] overflow-hidden border border-stone-600">
                     <div className="w-full h-12 bg-stone-950 mt-6 opacity-90"></div>
 
                     <div className="px-6 mt-4 flex items-center justify-between gap-4">
