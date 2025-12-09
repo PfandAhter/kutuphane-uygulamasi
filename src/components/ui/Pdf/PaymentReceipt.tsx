@@ -49,7 +49,7 @@ export const PaymentReceiptPdf = ({ fine, userName, paymentId }: Props) => (
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Sayin:</Text>
-                <Text style={{ fontSize: 14, marginBottom: 4 }}>{userName}</Text>
+                <Text style={{ fontSize: 14, marginBottom: 4 }}>{userName.toUpperCase().toString()}</Text>
                 <Text style={{ color: '#666', fontSize: 10 }}>Bu belge, asagidaki borc kaleminin odendigini teyit eder.</Text>
             </View>
 
@@ -63,7 +63,7 @@ export const PaymentReceiptPdf = ({ fine, userName, paymentId }: Props) => (
                 <Text style={[styles.col1, { paddingLeft: 5 }]}>
                     {fine.loanDetails ? fine.loanDetails.bookTitle : fine.description}
                 </Text>
-                <Text style={styles.col2}>{fine.fineType}</Text>
+                <Text style={styles.col2}>{fine.fineType.toUpperCase().toString()}</Text>
                 <Text style={styles.col3}>{fine.amount.toFixed(2)} TL</Text>
             </View>
 
