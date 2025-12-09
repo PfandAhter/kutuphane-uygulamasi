@@ -51,7 +51,7 @@ export default function AddCategoryModal({ isOpen, onClose, onSuccess }: Props) 
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6"
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4 border-b border-stone-100 pb-2">
@@ -70,7 +70,7 @@ export default function AddCategoryModal({ isOpen, onClose, onSuccess }: Props) 
                             placeholder="Örn: Bilim Kurgu"
                         />
                     </div>
-                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
                         <button
                             type="button"
                             onClick={onClose}

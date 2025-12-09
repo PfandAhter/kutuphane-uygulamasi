@@ -10,6 +10,8 @@ const Header = () => {
     const { isAuthenticated, user, logout } = useAuth();
     const [searchTerm, setSearchTerm] = useState(searchParams.get('title') || '');
 
+    const isAdmin = isAuthenticated && user && (Array.isArray(user.roles) ? user.roles.includes('Admin') : user.roles === 'Admin');
+
     const handleSearch = () => {
         const params = new URLSearchParams(searchParams.toString());
         if (searchTerm) {
@@ -28,14 +30,24 @@ const Header = () => {
         <header className="bg-amber-950 text-amber-50 shadow-lg py-4 border-b-4 border-amber-900 sticky top-0 z-50">
             <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
 
-                <div
-                    className="text-2xl font-serif font-bold tracking-wide cursor-pointer flex items-center gap-2 shrink-0"
-                    onClick={() => router.push('/')}
-                >
-                    <span className="text-amber-100">Kütüphane</span>
-                    <span className="text-amber-500 font-extrabold">App</span>
-                </div>
+                <div className="flex items-center justify-between w-full md:w-auto shrink-0">
+                    <div
+                        className="text-2xl font-serif font-bold tracking-wide cursor-pointer flex items-center gap-2"
+                        onClick={() => router.push('/')}
+                    >
+                        <span className="text-amber-100">Kütüphane</span>
+                        <span className="text-amber-500 font-extrabold">App</span>
+                    </div>
 
+                    {isAdmin && (
+                        <button
+                            onClick={() => router.push('/admin')}
+                            className="md:hidden px-3 py-1.5 bg-red-900/90 text-red-50 border border-red-700/50 rounded shadow-sm text-xs font-bold uppercase tracking-wide flex items-center gap-1 active:scale-95 transition-transform"
+                        >
+                            <span>⚙️</span> Yönetim
+                        </button>
+                    )}
+                </div>
                 <div className="flex-1 w-full max-w-2xl flex shadow-inner">
                     <input
                         type="text"
@@ -56,7 +68,7 @@ const Header = () => {
                     {isAuthenticated && user ? (
                         <div className="flex items-center gap-4">
 
-                            {(Array.isArray(user.roles) ? user.roles.includes('Admin') : user.roles === 'Admin') && (
+                            {isAdmin && (
                                 <button
                                     onClick={() => router.push('/admin')}
                                     className="px-3 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-50 border border-red-700 rounded shadow-sm transition-colors text-xs font-bold uppercase tracking-wide flex items-center gap-1"
@@ -73,7 +85,7 @@ const Header = () => {
                                     Merhaba, {user.firstName}
                                 </span>
                                 <span className="text-[10px] text-amber-400 uppercase tracking-wider">
-                                    {(Array.isArray(user.roles) ? user.roles.includes('Admin') : user.roles === 'Admin') ? 'Yönetici' : 'Üye'}
+                                    {isAdmin ? 'Yönetici' : 'Üye'}
                                 </span>
                             </div>
 

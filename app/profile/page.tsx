@@ -129,24 +129,44 @@ function ProfileContent() {
         <div className="min-h-screen bg-[#F5F5F4] flex flex-col font-sans">
             <Header />
 
-            <main className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <main className="container mx-auto px-4 py-6 md:py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
 
                     <div className="lg:col-span-1">
                         <ProfileSidebar user={user} stats={stats} />
                     </div>
 
                     <div className="lg:col-span-3">
-                        <div className="bg-white border border-stone-200 rounded-xl shadow-sm min-h-[600px] flex flex-col">
+                        <div className="bg-white border border-stone-200 rounded-xl shadow-sm min-h-[400px] md:min-h-[600px] flex flex-col">
 
-                            <div className="flex border-b border-stone-200 overflow-x-auto shrink-0">
-                                <button onClick={() => setActiveTab(TABS.ACTIVE_LOANS)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.ACTIVE_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>📖 Aktif Ödünçler</button>
-                                <button onClick={() => setActiveTab(TABS.PAST_LOANS)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>✅ Geçmiş Ödünçler</button>
-                                <button onClick={() => setActiveTab(TABS.ACTIVE_FINES)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.ACTIVE_FINES ? 'border-red-500 text-red-700 bg-red-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>⚠️ Ödenmemiş Cezalar</button>
-                                <button onClick={() => setActiveTab(TABS.PAST_FINES)} className={`px-6 py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_FINES ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}>📜 Ceza Geçmişi</button>
+                            <div className="flex border-b border-stone-200 overflow-x-auto shrink-0 scrollbar-hide">
+                                <button
+                                    onClick={() => setActiveTab(TABS.ACTIVE_LOANS)}
+                                    className={`px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.ACTIVE_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+                                >
+                                    📖 Aktif Ödünçler
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab(TABS.PAST_LOANS)}
+                                    className={`px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_LOANS ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+                                >
+                                    ✅ Geçmiş
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab(TABS.ACTIVE_FINES)}
+                                    className={`px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.ACTIVE_FINES ? 'border-red-500 text-red-700 bg-red-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+                                >
+                                    ⚠️ Cezalar
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab(TABS.PAST_FINES)}
+                                    className={`px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${activeTab === TABS.PAST_FINES ? 'border-amber-600 text-amber-800 bg-amber-50/50' : 'border-transparent text-stone-500 hover:text-stone-700'}`}
+                                >
+                                    📜 Geçmiş Cezalar
+                                </button>
                             </div>
 
-                            <div className="flex-1 p-4">
+                            <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
                                 {activeTab === TABS.ACTIVE_LOANS && (
                                     <ActiveLoans page={page} pageSize={pageSize} onDataLoaded={setTotalCount} />
                                 )}
@@ -165,7 +185,7 @@ function ProfileContent() {
                             </div>
 
                             {totalCount > 0 && (
-                                <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-xl mt-auto shrink-0">
+                                <div className="p-4 border-t border-stone-100 bg-stone-50 rounded-b-xl mt-auto shrink-0 overflow-x-auto">
                                     <PaginationControls
                                         currentPage={page}
                                         totalCount={totalCount}

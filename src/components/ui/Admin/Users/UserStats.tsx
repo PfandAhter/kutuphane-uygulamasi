@@ -9,9 +9,9 @@ interface Props {
 
 export default function UserStats({ totalCount, penalizedCount, activeReaderCount }: Props) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-4 mb-2">
-                <h1 className="text-2xl font-bold text-stone-800 font-serif">Üye Yönetimi</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="sm:col-span-2 md:col-span-4 mb-2">
+                <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Üye Yönetimi</h1>
                 <p className="text-stone-500 text-sm">Kayıtlı üyeleri görüntüleyin, düzenleyin veya engelleyin.</p>
             </div>
 

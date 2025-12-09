@@ -25,18 +25,6 @@ export default function OverdueLoansPage() {
         setLoading(true);
         try {
             const result = await loanService.getHistoryLoans(page, pageSize);
-            /*const overdueItems = result.items.filter(item => {
-                const isNotReturned = item.isActive === true || item.actualReturnDate === null;
-
-                const expectedDate = new Date(item.expectedReturnDate);
-                const now = new Date();
-
-                return isNotReturned && expectedDate < now;
-            });
-            setData({
-                ...result,
-                items: overdueItems,
-            });*/
             setData(result);
         } catch (error) {
             toast.error("Gecikmiş iadeler yüklenemedi.");
@@ -46,40 +34,41 @@ export default function OverdueLoansPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-end">
+        <div className="space-y-6 md:space-y-8 pb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-red-800 font-serif">Geçmiş İadeler</h1>
-                    <p className="text-red-500 text-sm">Teslim tarihi geçmiş ve henüz iade edilmemiş kitaplar.</p>
+                    <h1 className="text-xl md:text-2xl font-bold text-stone-800 font-serif">Geçmiş İşlemler</h1>
+                    <p className="text-stone-500 text-sm">Tamamlanmış iade ve ödünç işlemleri.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* İstatistik kartında filtrelenmiş sayıyı gösteriyoruz */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 <StatCard
-                    title="Gecikmiş Ödünç"
-                    value={data?.items.length || 0}
-                    icon="⚠️"
-                    trend="Acil"
-                    trendDirection="up"
+                    title="Tamamlanan"
+                    value={data?.totalCount || 0}
+                    icon="✅"
+                    trend="Arşiv"
+                    trendDirection="neutral"
                 />
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm">
+            <div className="bg-white p-4 md:p-6 rounded-lg border border-stone-200 shadow-sm">
                 <LoanTable
                     loans={data?.items || []}
                     loading={loading}
-                    emptyMessage="Harika! Şu an gecikmiş bir iade bulunmuyor."
-                    isOverdueList={true}
+                    emptyMessage="Henüz geçmiş bir işlem kaydı bulunmuyor."
+                    isOverdueList={false}
                 />
 
                 {data && (
-                    <Pagination
-                        currentPage={currentPage}
-                        pageSize={data.totalPages} // Burası pageSize değil totalPages olmalı
-                        totalCount={data.totalCount}
-                        onPageChange={(page) => setCurrentPage(page)}
-                    />
+                    <div className="mt-4">
+                        <Pagination
+                            currentPage={currentPage}
+                            pageSize={pageSize}
+                            totalCount={data.totalCount}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    </div>
                 )}
             </div>
         </div>

@@ -59,7 +59,7 @@ export default function GenericDeleteModal({
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 border border-red-100"
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-sm p-6 border border-red-100"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="text-center">
@@ -71,8 +71,8 @@ export default function GenericDeleteModal({
                         {entityType} Silinecek
                     </h3>
 
-                    <p className="text-stone-500 text-sm mb-6">
-                        <span className="font-bold text-stone-800">{entityName}</span> adlı kaydı silmek üzeresiniz. İlişkil tüm veriler de silinecektir.
+                    <p className="text-stone-500 text-sm mb-6 leading-relaxed">
+                        <span className="font-bold text-stone-800 break-words">"{entityName}"</span> adlı kaydı silmek üzeresiniz. İlişkili tüm veriler de silinecektir.
                         Bu işlem geri alınamaz.
                     </p>
 
@@ -80,14 +80,14 @@ export default function GenericDeleteModal({
                         <button
                             onClick={onClose}
                             disabled={loading}
-                            className="px-4 py-2 border border-stone-300 rounded text-stone-600 hover:bg-stone-50 text-sm transition-colors"
+                            className="px-4 py-2 border border-stone-300 rounded text-stone-600 hover:bg-stone-50 text-sm transition-colors w-full sm:w-auto"
                         >
                             İptal
                         </button>
                         <button
                             onClick={handleDelete}
                             disabled={loading}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                             {loading && <span className="animate-spin text-white">↻</span>}
                             {loading ? 'Siliniyor...' : 'Evet, Sil'}

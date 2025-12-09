@@ -53,12 +53,12 @@ export default function UpdatePublisherModal({ isOpen, onClose, publisher, onSuc
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 border border-stone-200"
+                className="bg-white rounded-lg shadow-xl w-11/12 max-w-sm p-6 border border-stone-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4 border-b border-stone-100 pb-2">
                     <h3 className="font-serif font-bold text-lg text-amber-950">Yayınevi Düzenle</h3>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600">✕</button>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-2xl leading-none">&times;</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,7 +72,7 @@ export default function UpdatePublisherModal({ isOpen, onClose, publisher, onSuc
                             placeholder="Örn: İş Bankası Yayınları"
                         />
                     </div>
-                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-stone-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
                         <button
                             type="button"
                             onClick={onClose}
@@ -83,7 +83,7 @@ export default function UpdatePublisherModal({ isOpen, onClose, publisher, onSuc
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50 transition-colors"
+                            className="px-6 py-2 text-sm bg-amber-900 text-white rounded hover:bg-amber-800 disabled:opacity-50 transition-colors font-medium"
                         >
                             {loading ? '...' : 'Güncelle'}
                         </button>
